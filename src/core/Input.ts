@@ -60,6 +60,7 @@ export class Input {
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     // Leave browser shortcuts such as Ctrl+W, Ctrl+S and Ctrl+D alone.
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target instanceof Element && e.target.closest('#economy-panel')) return;
     if (e.code === 'KeyE') {
       if (!e.repeat) this.interactLatched = true;
       return;

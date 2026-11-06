@@ -9,12 +9,15 @@ function poseOf(npc: NpcState): CharacterPose {
   if (npc.attentionTimer > 0) return 'none';
   if (npc.task === 'sit') return 'sit';
   if (npc.task === 'build') return 'build';
+  if (npc.task === 'produce') return npc.job === 'farmer' ? 'farm' : 'hunt';
   if (npc.task === 'chop') return npc.job === 'woodcutter' ? 'chop' : 'gather';
   return 'none';
 }
 
 function toolOf(npc: NpcState): CharacterTool {
   if (npc.assignedSite >= 0) return 'hammer';
+  if (npc.job === 'farmer') return 'hoe';
+  if (npc.job === 'hunter') return 'bow';
   return npc.job === 'woodcutter' ? 'axe' : 'none';
 }
 
@@ -48,7 +51,7 @@ export class NpcView {
     const visible = nearView && !npc.indoors && !npc.dormant;
     actor.group.visible = visible;
     if (!visible) return;
-    actor.setAction(poseOf(npc), npc.carrying, toolOf(npc));
+    actor.setAction(poseOf(npc), npc.carrying, toolOf(npc), npc.job === 'farmer' || npc.job === 'hunter');
     actor.sync(npc, alpha, frameDt, time);
   }
 }

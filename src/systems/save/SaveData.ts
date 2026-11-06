@@ -1,8 +1,10 @@
-import { BUILDINGS, ECONOMY } from '../../config';
+import { BUILDINGS, ECONOMY, KINGDOM } from '../../config';
 import type { GameState, TimeState } from '../../core/GameState';
 import type { NpcJob, NpcState, TravelPhase } from '../../entities/Npc';
 import { applyBuildingEffect, type SiteStatus } from '../construction/ConstructionState';
 import { loadExploration, saveExploration, type ExplorationSave } from '../exploration/ExplorationState';
+import { createKingdomState, type KingdomState } from '../economy/KingdomState';
+import { checkKingdom } from './KingdomValidation';
 
 /**
  * The save format: plain JSON describing what happened, and nothing about how it is
@@ -12,7 +14,7 @@ import { loadExploration, saveExploration, type ExplorationSave } from '../explo
  * its starting value, and rules of the game are enforced again when it is applied.
  */
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export interface SavedNpc {
   id: string;
@@ -24,6 +26,11 @@ export interface SavedNpc {
   indoors: boolean;
   carrying: boolean;
   woodDelivered: number;
+  workplace: 'farm' | 'lodge' | null;
+  productionProgress: number;
+  cargoFood: number;
+  cargoFurs: number;
+  huntCycles: number;
 }
 
 export interface SavedSite {
@@ -39,7 +46,8 @@ export interface SaveFile {
   savedAt: number;
   player: { x: number; z: number; facing: number; distanceTravelled: number };
   time: { dayTime: number; day: number };
-  economy: { coins: number; wood: number; woodCapacity: number };
+  economy: { coins: number; wood: number; woodCapacity: number; food: number; furs: number };
+  kingdom: KingdomState;
   village: { maxWoodcutters: number; watchPosts: number };
   exploration: ExplorationSave;
   construction: SavedSite[];
@@ -54,7 +62,8 @@ export function createSave(state: GameState, savedAt: number): SaveFile {
     savedAt,
     player: { x: player.x, z: player.z, facing: player.facing, distanceTravelled: player.distanceTravelled },
     time: { dayTime: time.dayTime, day: time.day },
-    economy: { coins: resources.coins, wood: resources.wood, woodCapacity: resources.woodCapacity },
+    economy: { ...resources },
+    kingdom: structuredClone(state.kingdom),
     village: { maxWoodcutters: village.maxWoodcutters, watchPosts: village.watchPosts },
     exploration: saveExploration(exploration),
     construction: construction.map((s) => ({ id: s.id, status: s.status, progress: s.progress, workerId: s.workerId })),
@@ -62,6 +71,7 @@ export function createSave(state: GameState, savedAt: number): SaveFile {
       id: n.id, job: n.job, travelPhase: n.travelPhase,
       x: n.x, z: n.z, facing: n.facing,
       indoors: n.indoors, carrying: n.carrying, woodDelivered: n.woodDelivered,
+      workplace: n.workplace, productionProgress: n.productionProgress, cargoFood: n.cargoFood, cargoFurs: n.cargoFurs, huntCycles: n.huntCycles,
     })),
   };
 }
@@ -71,12 +81,17 @@ export type ReadResult =
   | { status: 'unreadable'; reason: string }
   | { status: 'newer'; version: number };
 
-const JOBS: readonly NpcJob[] = ['villager', 'gatherer', 'woodcutter', 'traveler'];
+const JOBS: readonly NpcJob[] = ['villager', 'gatherer', 'woodcutter', 'traveler', 'farmer', 'hunter'];
 const PHASES: readonly TravelPhase[] = ['settled', 'waiting', 'journey'];
 const STATUSES: readonly SiteStatus[] = ['available', 'funded', 'building', 'completed'];
 
 /** Upgrades older saves, one version at a time. When the format changes, add a step here. */
-const MIGRATIONS: Record<number, (old: Record<string, unknown>) => Record<string, unknown>> = {};
+const MIGRATIONS: Record<number, (old: Record<string, unknown>) => Record<string, unknown>> = {
+  1: (old) => {
+    const day = isRecord(old.time) && isFiniteNumber(old.time.day) ? old.time.day : 1;
+    return { ...old, version: 2, economy: { ...(isRecord(old.economy) ? old.economy : {}), food: ECONOMY.startFood, furs: 0 }, kingdom: createKingdomState(day) };
+  },
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -169,6 +184,11 @@ function checkSave(raw: Record<string, unknown>): { save: SaveFile; repairs: str
       indoors: entry.indoors === true,
       carrying: entry.carrying === true,
       woodDelivered: number(`${entry.id} wood`, entry.woodDelivered, 0, 0),
+      workplace: entry.workplace === 'farm' || entry.workplace === 'lodge' ? entry.workplace : null,
+      productionProgress: number('production progress', entry.productionProgress, 0, 0, 1),
+      cargoFood: Math.floor(number('food cargo', entry.cargoFood, 0, 0, 100)),
+      cargoFurs: Math.floor(number('fur cargo', entry.cargoFurs, 0, 0, 100)),
+      huntCycles: Math.floor(number('hunt cycles', entry.huntCycles, 0, 0, Number.MAX_SAFE_INTEGER)),
     });
   }
 
@@ -188,6 +208,8 @@ function checkSave(raw: Record<string, unknown>): { save: SaveFile; repairs: str
         day: Math.floor(number('day', time.day, 1, 1)),
       },
       economy: {
+        food: Math.floor(number('food', economy.food, ECONOMY.startFood, 0, Number.MAX_SAFE_INTEGER)),
+        furs: Math.floor(number('furs', economy.furs, 0, 0, Number.MAX_SAFE_INTEGER)),
         coins: Math.floor(number('coins', economy.coins, ECONOMY.startCoins, 0)),
         wood: Math.floor(number('wood', economy.wood, 0, 0)),
         woodCapacity: number('wood capacity', economy.woodCapacity, ECONOMY.baseWoodCapacity, 0),
@@ -202,6 +224,7 @@ function checkSave(raw: Record<string, unknown>): { save: SaveFile; repairs: str
       },
       construction,
       npcs,
+      kingdom: checkKingdom(raw.kingdom, Math.floor(number('day', time.day, 1, 1)), repairs),
     },
   };
 }
@@ -256,6 +279,11 @@ export function applySave(state: GameState, save: SaveFile, world: SaveWorld): v
 
   resources.coins = save.economy.coins;
   resources.wood = Math.min(save.economy.wood, resources.woodCapacity);
+  resources.food = save.economy.food;
+  resources.furs = save.economy.furs;
+  state.kingdom = structuredClone(save.kingdom);
+  const merchantSpot = world.nearestWalkable(state.kingdom.merchant.x, state.kingdom.merchant.z);
+  if (merchantSpot) { state.kingdom.merchant.x = merchantSpot.x; state.kingdom.merchant.z = merchantSpot.z; }
 
   const savedNpcs = new Map(save.npcs.map((n) => [n.id, n]));
   for (const npc of state.npcs) {
@@ -263,6 +291,19 @@ export function applySave(state: GameState, save: SaveFile, world: SaveWorld): v
     if (saved) applyNpc(npc, saved, world);
   }
   holdToWoodcutterLimit(state.npcs, village.maxWoodcutters);
+  for (const job of ['farmer', 'hunter'] as const) {
+    const workplace = job === 'farmer' ? 'farm' : 'lodge';
+    let occupied = 0;
+    const limit = job === 'farmer' ? KINGDOM.farm.slots : KINGDOM.hunt.slots;
+    for (const npc of state.npcs) {
+      if (npc.job !== job) continue;
+      if (occupied < limit && state.construction.some((s) => s.id === workplace && s.status === 'completed')) {
+        npc.workplace = workplace; occupied++;
+      } else {
+        npc.job = 'villager'; npc.workplace = null; npc.cargoFood = npc.cargoFurs = 0; npc.carrying = false;
+      }
+    }
+  }
   restoreBuilders(state, savedSites);
 }
 
@@ -274,12 +315,12 @@ function applyNpc(npc: NpcState, saved: SavedNpc, world: SaveWorld): void {
     // Started as a traveler: waiting, on the road, or settled with any ordinary job.
     if (saved.travelPhase === 'settled') {
       npc.travelPhase = 'settled';
-      npc.job = saved.job === 'woodcutter' ? 'woodcutter' : 'villager';
+      npc.job = ['woodcutter', 'farmer', 'hunter'].includes(saved.job) ? saved.job : 'villager';
     } else {
       npc.travelPhase = saved.travelPhase;
     }
   } else {
-    npc.job = saved.job === 'woodcutter' ? 'woodcutter' : 'villager';
+    npc.job = ['woodcutter', 'farmer', 'hunter'].includes(saved.job) ? saved.job : 'villager';
   }
 
   if (Number.isFinite(saved.x) && Number.isFinite(saved.z)) {
@@ -292,7 +333,14 @@ function applyNpc(npc: NpcState, saved: SavedNpc, world: SaveWorld): void {
   npc.y = npc.prevY = world.surfaceHeight(npc.x, npc.z);
   npc.facing = npc.prevFacing = saved.facing;
   npc.indoors = saved.indoors && npc.travelPhase === 'settled';
-  npc.carrying = saved.carrying && npc.job === 'woodcutter';
+  const producer = npc.job === 'farmer' || npc.job === 'hunter';
+  npc.cargoFood = producer ? saved.cargoFood : 0;
+  npc.cargoFurs = npc.job === 'hunter' ? saved.cargoFurs : 0;
+  npc.carrying = saved.carrying && (npc.job === 'woodcutter' || (producer && npc.cargoFood > 0));
+  if (!npc.carrying) npc.cargoFood = npc.cargoFurs = 0;
+  npc.workplace = producer ? (npc.job === 'farmer' ? 'farm' : 'lodge') : null;
+  npc.productionProgress = producer ? saved.productionProgress : 0;
+  npc.huntCycles = npc.job === 'hunter' ? saved.huntCycles : 0;
   npc.woodDelivered = saved.woodDelivered;
   // What they were doing this moment is not saved: they decide again almost immediately,
   // and search for a fresh path from where they stand.

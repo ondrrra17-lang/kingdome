@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { test, type Browser, type Page } from '@playwright/test';
+import { BUILDINGS } from '../src/config';
 
 /**
  * Reproducible frame-rate benchmark. It reports numbers and never fails on them, because
@@ -14,6 +15,8 @@ import { test, type Browser, type Page } from '@playwright/test';
  * PERF_SECONDS  sampling window per scenario (default 12)
  * PERF_LABEL    name for the results file in test-results/ (default "current")
  * PERF_ONLY     only scenarios whose name contains this
+ *               use | between alternatives, e.g. "Village, day|Dense forest"
+ * PERF_ECONOMY  set to 1 for a built, staffed Phase 5 village (current build only)
  */
 
 const ROUNDS = Number(process.env.PERF_ROUNDS ?? 3);
@@ -51,7 +54,8 @@ const ALL_SCENARIOS: readonly Scenario[] = [
   { name: 'Travel between regions', dayTime: 0.45, route: [[-60, 1, 'KeyD', 7000], [5.6, 0, 'KeyW', 5000], [-25, 6, 'KeyS', 3500]] },
 ];
 
-const SCENARIOS = ALL_SCENARIOS.filter((s) => s.name.includes(process.env.PERF_ONLY ?? ''));
+const FILTERS = (process.env.PERF_ONLY ?? '').split('|');
+const SCENARIOS = ALL_SCENARIOS.filter((s) => FILTERS.some((filter) => s.name.includes(filter)));
 
 /** Starts timing every frame in the page. GPU time is measured if the browser allows it. */
 async function installProbe(page: Page): Promise<void> {
@@ -178,6 +182,31 @@ async function runRound(browser: Browser, baseURL: string): Promise<{ loadMs: nu
   await page.goto('/?debug');
   await page.waitForFunction(() => window.__game, undefined, { timeout: 90_000 });
   const loadMs = Date.now() - started;
+  if (process.env.PERF_ECONOMY === '1') {
+    await page.evaluate((effects) => {
+      const g = window.__game, s = g.state;
+      if (!s.kingdom) throw new Error('PERF_ECONOMY requires the Phase 5 build.');
+      for (const site of s.construction) { site.status = 'completed'; site.progress = 1; }
+      for (const effect of effects) {
+        if (effect.kind === 'woodStorage') s.resources.woodCapacity += effect.amount;
+        if (effect.kind === 'woodcutterSlot') s.village.maxWoodcutters += effect.amount;
+        if (effect.kind === 'watchPost') s.village.watchPosts += effect.amount;
+      }
+      const jobs = [['bren', 'farmer', 'farm'], ['cora', 'hunter', 'lodge'], ['dunn', 'woodcutter', null]];
+      for (const [id, job, workplace] of jobs) {
+        const n = s.npcs.find((n: { id: string }) => n.id === id);
+        n.job = job; n.workplace = workplace; n.state = 'idle'; n.task = 'none'; n.stateTimer = 0;
+        n.pathStatus = 'none'; n.pathLength = 0; n.arrived = false;
+      }
+      const merchant = g.merchantSystem.npc;
+      merchant.x = merchant.prevX = -12; merchant.z = merchant.prevZ = 1.5;
+      merchant.y = merchant.prevY = g.world.surfaceHeight(merchant.x, merchant.z);
+      merchant.dormant = false; merchant.arrived = true;
+      s.kingdom.merchant.phase = 'arriving';
+      s.kingdom.merchant.nextVisitDay = 6;
+      s.kingdom.field = { stage: 'growing', progress: 0.4 };
+    }, BUILDINGS.map((def) => def.effect));
+  }
   await installProbe(page);
   await page.waitForTimeout(1500);
   const samples: Sample[] = [];

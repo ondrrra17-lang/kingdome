@@ -8,7 +8,7 @@ import { createSchedule } from '../systems/npc/schedule';
  */
 
 /** A traveler is someone who does not live in the village yet, and so cannot be given work. */
-export type NpcJob = 'villager' | 'gatherer' | 'woodcutter' | 'traveler';
+export type NpcJob = 'villager' | 'gatherer' | 'woodcutter' | 'traveler' | 'farmer' | 'hunter';
 
 /** Where a traveler is in joining the village. Everyone else is 'settled'. */
 export type TravelPhase = 'settled' | 'waiting' | 'journey';
@@ -22,7 +22,7 @@ export type NpcTask =
   | 'toTree' | 'chop' | 'deliver' | 'drop'
   | 'toSite' | 'build'
   | 'goHome' | 'enterHouse' | 'sleep'
-  | 'journey';
+  | 'journey' | 'toWorkplace' | 'produce';
 
 export type PathStatus = 'none' | 'pending' | 'ready' | 'failed';
 
@@ -78,6 +78,11 @@ export interface NpcState {
   assignedSite: number;
   /** Lifetime wood delivered to storage. */
   woodDelivered: number;
+  workplace: 'farm' | 'lodge' | null;
+  productionProgress: number;
+  cargoFood: number;
+  cargoFurs: number;
+  huntCycles: number;
 
   stateTimer: number;
   decisionTimer: number;
@@ -143,6 +148,7 @@ export function createNpc(def: VillagerDefinition, x: number, y: number, z: numb
     targetTree: -1,
     assignedSite: -1,
     woodDelivered: 0,
+    workplace: null, productionProgress: 0, cargoFood: 0, cargoFurs: 0, huntCycles: 0,
     stateTimer: 0.4 + nextRandom(rng) * 2.5,
     // Staggered so all villagers do not make decisions on the same step.
     decisionTimer: (index / 5) * NPC.decisionInterval,

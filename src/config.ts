@@ -260,6 +260,10 @@ export const SAVE = {
 } as const;
 
 export const ECONOMY = {
+  startFood: 9,
+  villagersPerFood: 3,
+  shortageEfficiency: 0.6,
+  lowFoodDays: 2,
   startCoins: 5,
   /** Paid once, to invite a traveler to the village. Giving a villager a job is free. */
   travelerInviteCost: 2,
@@ -704,6 +708,7 @@ export interface BuildingCost {
 }
 
 export type BuildingEffect =
+  | { readonly kind: 'workplace'; readonly amount: number }
   | { readonly kind: 'woodcutterSlot'; readonly amount: number }
   | { readonly kind: 'woodStorage'; readonly amount: number }
   | { readonly kind: 'watchPost'; readonly amount: number };
@@ -711,7 +716,7 @@ export type BuildingEffect =
 export interface BuildingDefinition {
   readonly id: string;
   readonly name: string;
-  readonly style: 'hut' | 'shed' | 'watchtower';
+  readonly style: 'hut' | 'shed' | 'watchtower' | 'farm' | 'lodge';
   readonly cost: BuildingCost;
   /** Seconds of a villager's work. */
   readonly buildSeconds: number;
@@ -777,4 +782,35 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
     stand: [-11.6, 5.4],
     timberSide: -1,
   },
+  {
+    id: 'farm', name: 'Small Farm', style: 'farm', cost: { wood: 5, coins: 2 },
+    buildSeconds: 18, effect: { kind: 'workplace', amount: 1 },
+    completedText: 'One villager can now work as a farmer.',
+    x: -47, z: 5.5, rotY: 0, halfX: 2.5, halfZ: 1.2, height: 1.8,
+    anchor: [-47, 2.6], stand: [-43, 5.5], timberSide: 1,
+  },
+  {
+    id: 'lodge', name: "Hunter's Lodge", style: 'lodge', cost: { wood: 6, coins: 3 },
+    buildSeconds: 22, effect: { kind: 'workplace', amount: 1 },
+    completedText: 'One villager can now work as a hunter.',
+    x: 10, z: 5.7, rotY: 0, halfX: 2.1, halfZ: 1.4, height: 3.5,
+    anchor: [10, 3.1], stand: [6.8, 5.3], timberSide: 1,
+  },
 ];
+
+/** Phase 5 balance and authored destinations; no random rewards. */
+export const KINGDOM = {
+  farm: { building: 'farm', slots: 1, workplace: [-47, 2.6] as const, seconds: 32, food: 5, matureAt: 0.72 },
+  hunt: { building: 'lodge', slots: 1, zones: [[10, -27.5], [80.5, 14.5]] as const, seconds: 20, food: 5, furEveryCycles: 3, furs: 1 },
+  merchant: { intervalDays: 3, firstDay: 3, visitDays: 0.65, walkSpeed: 2.6, entrance: [-92, 0] as const, market: [-12, 1.5] as const, retrySeconds: 2 },
+  trades: [
+    { id: 'sell-wood', label: 'Sell 5 wood for 2 coins', cost: { wood: 5 }, reward: { coins: 2 } },
+    { id: 'sell-furs', label: 'Sell 2 furs for 4 coins', cost: { furs: 2 }, reward: { coins: 4 } },
+    { id: 'buy-food', label: 'Buy 3 food for 2 coins', cost: { coins: 2 }, reward: { food: 3 } },
+  ],
+  events: {
+    cache: { id: 'lost-supplies-ruins', x: 10, z: -27.5, food: 4, wood: 2 },
+    rumor: { id: 'travelers-rumor', speaker: 'wren' },
+    request: { id: 'village-firewood', speaker: 'alda', wood: 3, coins: 2 },
+  },
+} as const;

@@ -256,8 +256,26 @@ function watchtower(def: BuildingDefinition, seed: number): StructureGeometry {
 
 export function buildStructure(def: BuildingDefinition, seed: number): StructureGeometry {
   switch (def.style) {
+    case 'farm': return farm(def);
+    case 'lodge': return hut(def, seed);
     case 'hut': return hut(def, seed);
     case 'shed': return shed(def, seed);
     case 'watchtower': return watchtower(def, seed);
   }
+}
+
+function farm(def: BuildingDefinition): StructureGeometry {
+  const b = new LowPolyBuilder();
+  const ends: number[] = [];
+  const mark = (): void => { ends.push(b.vertexCount); };
+  b.box(def.halfX * 2, 0.12, def.halfZ * 2, { at: [0, 0.04, 0], color: 0x65472e }); mark();
+  for (const x of [-def.halfX, 0, def.halfX]) {
+    b.box(0.13, 1.15, 0.13, { at: [x, 0.55, -def.halfZ], color: PALETTE.timber }); mark();
+  }
+  for (const y of [0.38, 0.8]) {
+    b.box(def.halfX * 2, 0.09, 0.09, { at: [0, y, -def.halfZ], color: PALETTE.plank }); mark();
+  }
+  b.box(0.8, 0.5, 0.65, { at: [def.halfX + 0.4, 0.25, 0], color: PALETTE.plank }); mark();
+  b.box(0.07, 1.45, 0.07, { at: [def.halfX + 0.6, 0.8, 0.35], rot: [0, 0, 0.25], color: PALETTE.timberLight }); mark();
+  return { geometry: b.build(), pieceEnds: ends };
 }

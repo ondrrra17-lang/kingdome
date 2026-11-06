@@ -29,7 +29,7 @@ test.beforeEach(async ({ game }) => {
 test('a first visit has no start screen, and saving shows a confirmation', async ({ game, page }) => {
   await expect(page.locator('#start-screen')).toHaveCount(0);
   await saveWithButton(page);
-  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).version, SAVE_KEY)).toBe(1);
+  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).version, SAVE_KEY)).toBe(2);
   expect((await game.hud()).coins).toBe(5);
 });
 

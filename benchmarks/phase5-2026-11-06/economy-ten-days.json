@@ -1,0 +1,37 @@
+{
+  "days": 10,
+  "fixedStepHz": 60,
+  "initialPopulation": 5,
+  "onePrebuiltWorkplace": true,
+  "trading": false,
+  "eventRewards": false,
+  "dailyAllowanceEnabled": true,
+  "runs": {
+    "farmer": {
+      "day": 11,
+      "resources": {
+        "coins": 25,
+        "wood": 0,
+        "food": 84,
+        "furs": 0,
+        "woodCapacity": 10
+      },
+      "huntCycles": 0,
+      "nextMerchantDay": 12,
+      "pathSearches": 500
+    },
+    "hunter": {
+      "day": 11,
+      "resources": {
+        "coins": 25,
+        "wood": 0,
+        "food": 39,
+        "furs": 3,
+        "woodCapacity": 10
+      },
+      "huntCycles": 10,
+      "nextMerchantDay": 12,
+      "pathSearches": 483
+    }
+  }
+}

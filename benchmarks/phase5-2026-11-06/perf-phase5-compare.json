@@ -1,0 +1,86 @@
+{
+  "baseline": {
+    "rounds": 3,
+    "loadMs": 1444,
+    "scenarios": [
+      {
+        "name": "Village, day",
+        "avgFps": 1039.0388391519966,
+        "low1Fps": 496.7948717948602,
+        "avgFrameMs": 0.9624279308135798,
+        "medianFrameMs": 0.8999999999996362,
+        "worstFrameMs": 3.100000000000364,
+        "gpuMs": 0.7880653881631999,
+        "cpuMs": 0.829333332379659,
+        "simMs": 0.028105054519725482,
+        "drawCalls": 188,
+        "triangles": 145201,
+        "fpsPerRound": [
+          1092.2,
+          1039,
+          1032.1
+        ]
+      },
+      {
+        "name": "Dense forest",
+        "avgFps": 1167.0080431633112,
+        "low1Fps": 335.9731221502303,
+        "avgFrameMs": 0.8568921232876713,
+        "medianFrameMs": 0.7000000000007276,
+        "worstFrameMs": 7.399999999997817,
+        "gpuMs": 0.8197509631418217,
+        "cpuMs": 0.7268333400289217,
+        "simMs": 0.020617620308955642,
+        "drawCalls": 167,
+        "triangles": 154199,
+        "fpsPerRound": [
+          1167,
+          1137.5,
+          1172.1
+        ]
+      }
+    ]
+  },
+  "phase5-compare": {
+    "rounds": 3,
+    "loadMs": 1353,
+    "scenarios": [
+      {
+        "name": "Village, day",
+        "avgFps": 968.5205839756231,
+        "low1Fps": 480.928689883896,
+        "avgFrameMs": 1.032502578205575,
+        "medianFrameMs": 1,
+        "worstFrameMs": 3.199999999999818,
+        "gpuMs": 0.7922504163071995,
+        "cpuMs": 0.888999999165535,
+        "simMs": 0.029072450445358326,
+        "drawCalls": 194,
+        "triangles": 148226,
+        "fpsPerRound": [
+          895.8,
+          968.5,
+          984.7
+        ]
+      },
+      {
+        "name": "Dense forest",
+        "avgFps": 1160.4504631980226,
+        "low1Fps": 359.5447490946661,
+        "avgFrameMs": 0.8617343279299956,
+        "medianFrameMs": 0.7999999999992724,
+        "worstFrameMs": 5.899999999997817,
+        "gpuMs": 0.8313568996379456,
+        "cpuMs": 0.7381666737794876,
+        "simMs": 0.024501721004307704,
+        "drawCalls": 170,
+        "triangles": 157158,
+        "fpsPerRound": [
+          1122.9,
+          1160.5,
+          1161
+        ]
+      }
+    ]
+  }
+}

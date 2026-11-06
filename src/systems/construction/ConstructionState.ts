@@ -30,14 +30,14 @@ export function createSiteStates(): BuildingSiteState[] {
 export type FundResult = 'funded' | 'already-funded' | 'insufficient';
 
 /** Pays for a site. Resources are deducted only here, and only on the AVAILABLE -> FUNDED step. */
-export function fundSite(site: BuildingSiteState, cost: BuildingCost, resources: ResourceState): FundResult {
+export function fundSite(site: BuildingSiteState, cost: BuildingCost, resources: Pick<ResourceState, 'coins' | 'wood'> & Partial<ResourceState>): FundResult {
   if (site.status !== 'available') return 'already-funded';
   if (!trySpend(resources, cost)) return 'insufficient';
   site.status = 'funded';
   return 'funded';
 }
 
-export function canAfford(cost: BuildingCost, resources: ResourceState): boolean {
+export function canAfford(cost: BuildingCost, resources: Pick<ResourceState, 'coins' | 'wood'> & Partial<ResourceState>): boolean {
   return hasResources(resources, cost);
 }
 
@@ -70,6 +70,10 @@ export function assignWorkers(sites: readonly BuildingSiteState[], defs: readonl
     if (best) {
       site.workerId = best.id;
       best.assignedSite = s;
+      // A worker may have just finished another site; its old build task cannot carry over.
+      best.state = 'idle'; best.task = 'none'; best.stateTimer = 0;
+      best.pathStatus = 'none'; best.pathLength = 0; best.arrived = false;
+      best.targetTree = -1;
     }
   }
 }
@@ -91,7 +95,7 @@ export function advanceSite(site: BuildingSiteState, worker: NpcState, buildSeco
 }
 
 /** Applies what a finished building does. Driven entirely by its data. */
-export function applyBuildingEffect(def: BuildingDefinition, resources: ResourceState, limits: VillageLimits): void {
+export function applyBuildingEffect(def: BuildingDefinition, resources: Pick<ResourceState, 'woodCapacity'>, limits: VillageLimits): void {
   const effect = def.effect;
   switch (effect.kind) {
     case 'woodcutterSlot':

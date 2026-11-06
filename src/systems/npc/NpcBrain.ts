@@ -1,4 +1,4 @@
-import { ECONOMY, NPC, type VillagerPersonality } from '../../config';
+import { ECONOMY, KINGDOM, NPC, type VillagerPersonality } from '../../config';
 import { nextRandom, type NpcJob, type NpcState, type NpcTask } from '../../entities/Npc';
 import { settleTraveler } from '../Recruitment';
 import { addWood, isStorageFull, type ResourceState } from '../Resources';
@@ -13,12 +13,13 @@ import type { SiteQueries } from './VillageSites';
 
 export interface BrainContext {
   dayTime: number;
-  resources: ResourceState;
+  resources: Pick<ResourceState, 'coins' | 'wood' | 'woodCapacity'>;
   sites: SiteQueries;
   /** All villagers, so workers do not pick the same tree. */
   npcs: readonly NpcState[];
   /** Called when a traveler reaches the village. */
   onSettled?(npc: NpcState): void;
+  onProduceDelivery?(npc: NpcState): void;
 }
 
 export type Activity = 'work' | 'wander' | 'fire' | 'house' | 'sit' | 'home';
@@ -30,7 +31,7 @@ export function chooseActivity(job: NpcJob, personality: VillagerPersonality, ph
     if (roll < 0.55) return 'fire';
     return roll < 0.75 ? 'sit' : 'house';
   }
-  if (job === 'woodcutter') return 'work';
+  if (job === 'woodcutter' || job === 'farmer' || job === 'hunter') return 'work';
   if (job === 'gatherer') return roll < 0.85 ? 'work' : 'fire';
   const weights = NPC.personalities[personality];
   if (roll < weights.wander) return 'wander';
@@ -52,7 +53,7 @@ function setIdle(npc: NpcState, seconds: number): void {
   npc.arrived = false;
 }
 
-function walkTo(npc: NpcState, task: NpcTask, x: number, z: number): void {
+export function walkTo(npc: NpcState, task: NpcTask, x: number, z: number): void {
   npc.state = 'walk';
   npc.task = task;
   npc.goalX = x;
@@ -142,6 +143,15 @@ function chooseNext(npc: NpcState, phase: DayPhase, ctx: BrainContext): void {
       startGoingHome(npc, ctx);
       return;
     case 'work': {
+      if (npc.job === 'farmer' || npc.job === 'hunter') {
+        const point = npc.job === 'farmer' ? KINGDOM.farm.workplace : KINGDOM.hunt.zones[npc.huntCycles % KINGDOM.hunt.zones.length];
+        if (sites.nearestPoint(point[0], point[1])) {
+          walkTo(npc, 'toWorkplace', sites.pointX, sites.pointZ);
+          setFaceTarget(npc, sites.pointX, sites.pointZ + (npc.job === 'farmer' ? 2 : -1));
+          return;
+        }
+        break;
+      }
       // With the pile full there is nothing to cut wood for, so the woodcutter takes a break.
       const tree = npc.job === 'woodcutter' && isStorageFull(ctx.resources) ? -1 : pickTree(npc, ctx);
       if (tree >= 0) {
@@ -183,12 +193,16 @@ function handleArrival(npc: NpcState, ctx: BrainContext): void {
   npc.arrived = false;
   npc.pathStatus = 'none';
   switch (npc.task) {
+    case 'toWorkplace':
+      npc.state = 'work'; npc.task = 'produce';
+      return;
     case 'toTree':
       npc.state = 'work';
       npc.task = 'chop';
       npc.stateTimer = npc.job === 'woodcutter' ? between(npc, NPC.chopSeconds * 0.85, NPC.chopSeconds * 1.15) : NPC.gatherSeconds;
       return;
     case 'deliver':
+      if (npc.carrying && (npc.job === 'farmer' || npc.job === 'hunter')) ctx.onProduceDelivery?.(npc);
       // Wood counts the moment it is set down. A gatherer's sticks feed the fire, not storage.
       if (npc.carrying && npc.job === 'woodcutter') {
         npc.woodDelivered += addWood(ctx.resources, ECONOMY.woodPerDelivery);
@@ -316,7 +330,7 @@ export function updateBrain(npc: NpcState, ctx: BrainContext): void {
         setIdle(npc, between(npc, NPC.idleMin, NPC.idleMax));
       } else if (phase === 'night' && npc.task !== 'goHome' && npc.task !== 'deliver') {
         startGoingHome(npc, ctx);
-      } else if (phase !== 'day' && (npc.task === 'toTree' || npc.task === 'toSite')) {
+      } else if (phase !== 'day' && (npc.task === 'toTree' || npc.task === 'toSite' || npc.task === 'toWorkplace')) {
         npc.targetTree = -1;
         chooseNext(npc, phase, ctx);
       } else if (npc.task === 'toSite' && npc.assignedSite < 0) {
@@ -324,6 +338,10 @@ export function updateBrain(npc: NpcState, ctx: BrainContext): void {
       }
       return;
     case 'work':
+      if (npc.task === 'produce') {
+        if (npc.carrying || phase !== 'day') chooseNext(npc, phase, ctx);
+        return;
+      }
       if (npc.task === 'build') {
         // The site keeps the worker until it is done. At dusk they stop, but stay assigned.
         if (npc.assignedSite < 0 || phase !== 'day') chooseNext(npc, phase, ctx);

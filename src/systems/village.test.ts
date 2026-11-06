@@ -41,7 +41,7 @@ function setup(dayTime = DAY): { npc: NpcState; ctx: BrainContext } {
 
 describe('resources and recruitment', () => {
   it('starts with the configured coins and no wood', () => {
-    expect(createGameState(0).resources).toEqual({ coins: ECONOMY.startCoins, wood: 0, woodCapacity: ECONOMY.baseWoodCapacity });
+    expect(createGameState(0).resources).toEqual({ coins: ECONOMY.startCoins, wood: 0, food: ECONOMY.startFood, furs: 0, woodCapacity: ECONOMY.baseWoodCapacity });
     expect(ECONOMY.startCoins).toBe(5);
     expect(ECONOMY.travelerInviteCost).toBe(2);
   });

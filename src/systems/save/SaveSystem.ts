@@ -80,7 +80,7 @@ export class SaveSystem {
   /** What changing is worth saving soon for. Checked rarely, so a string is cheap enough. */
   private progress(): string {
     const { resources, exploration, construction, npcs, time } = this.state;
-    let summary = `${time.day}|${resources.coins}|${resources.wood}|`;
+    let summary = `${time.day}|${resources.coins}|${resources.wood}|${resources.food}|${resources.furs}|${this.state.kingdom.merchant.phase}|${JSON.stringify(this.state.kingdom.events)}|`;
     for (const t of exploration.treasures) summary += t.opened ? '1' : '0';
     for (const l of exploration.landmarks) summary += l.discovered ? '1' : '0';
     for (const s of construction) summary += s.status[0];

@@ -44,6 +44,12 @@ import { SettlementView } from '../world/SettlementView';
 import { TerrainView } from '../world/TerrainView';
 import { VegetationView } from '../world/VegetationView';
 import { buildWorldData, type WorldData } from '../world/WorldData';
+import { FoodSystem } from '../systems/economy/FoodSystem';
+import { ProductionSystem } from '../systems/economy/ProductionSystem';
+import { MerchantSystem } from '../systems/economy/MerchantSystem';
+import { createEconomyInteractables } from '../systems/economy/economyInteractables';
+import { EconomyPanel } from '../rendering/EconomyPanel';
+import { KingdomView } from '../world/KingdomView';
 
 /** Keeps shader time small enough to stay precise over long sessions. */
 const SHADER_TIME_WRAP = 3600;
@@ -81,6 +87,12 @@ export class Game {
   private readonly constructionSystem: ConstructionSystem;
   private readonly constructionView: ConstructionView;
   private readonly dailyIncome: DailyIncome;
+  private readonly foodSystem: FoodSystem;
+  private readonly productionSystem: ProductionSystem;
+  private readonly merchantSystem: MerchantSystem;
+  private readonly merchantView: NpcView;
+  private readonly kingdomView: KingdomView;
+  private readonly economyPanel: EconomyPanel;
   readonly saveSystem: SaveSystem;
   private readonly saveBar: SaveBar;
   /** A dialog is open: nothing moves until it closes, though the world is still drawn. */
@@ -132,11 +144,15 @@ export class Game {
     }
     this.movement = new PlayerMovementSystem(this.input, this.collision, this.world);
     const pathfinder = new Pathfinder(nav);
-    this.npcSystem = new NpcSystem(this.state, sites, pathfinder, { collision: this.collision, surfaceHeight: this.world.surfaceHeight });
+    this.merchantSystem = new MerchantSystem(this.state, sites, this.world.surfaceHeight);
+    this.npcSystem = new NpcSystem(this.state, sites, pathfinder, { collision: this.collision, surfaceHeight: this.world.surfaceHeight }, this.merchantSystem);
+    this.foodSystem = new FoodSystem(this.state);
+    this.productionSystem = new ProductionSystem(this.state);
     this.constructionSystem = new ConstructionSystem(this.state, this.collision, nav);
     this.dailyIncome = new DailyIncome(this.state);
     this.explorationSystem = new ExplorationSystem(this.state);
-    this.interaction = new InteractionSystem([...createVillageInteractables(this.state), ...createExplorationInteractables(this.state)]);
+    this.economyPanel = new EconomyPanel(this.state, () => this.input.releaseAll());
+    this.interaction = new InteractionSystem([...createVillageInteractables(this.state), ...createExplorationInteractables(this.state), ...createEconomyInteractables(this.state, () => this.economyPanel.showTrading())]);
 
     // Then the visual representation.
     this.rendererHost = new RendererHost(container, (width, height) => this.onResize(width, height));
@@ -156,10 +172,12 @@ export class Game {
     const vegetation = this.vegetation;
     this.playerView = new ActorView(new PlaceholderCharacter({ hero: true }), glow, PLAYER.walkSpeed);
     this.npcViews = npcs.map((npc, i) => new NpcView(npc, definitions[i].palette, glow));
+    this.merchantView = new NpcView(this.merchantSystem.npc, NPC.travelers[0].palette, glow);
+    this.kingdomView = new KingdomView(this.state, this.merchantSystem.npc, this.world.surfaceHeight);
     this.explorationView = new ExplorationView(this.world, this.state.exploration, glow);
     this.constructionView = new ConstructionView(this.state.construction, this.world.heightfield.sample.bind(this.world.heightfield), this.rig.camera.quaternion, glow);
     this.marker = new InteractionMarkerView(this.world.surfaceHeight);
-    this.hud = new HudView(this.state, this.interaction);
+    this.hud = new HudView(this.state, this.interaction, () => this.openProfessions());
     this.saveSystem = new SaveSystem(this.state, this.store);
     this.saveBar = new SaveBar(this.hud.element, () => this.saveByHand(), () => void this.askToStartOver());
     this.saveSystem.onResult = (result, reason) => {
@@ -182,6 +200,8 @@ export class Game {
       this.constructionView.group,
       this.explorationView.group,
       this.rig.camera,
+      this.merchantView.object,
+      this.kingdomView.group,
     );
     for (const view of this.npcViews) this.scene.add(view.object);
     vegetation.group.updateMatrixWorld(true);
@@ -218,6 +238,8 @@ export class Game {
     this.input.dispose();
     this.hint.dispose();
     this.hud.dispose();
+    this.economyPanel.dispose();
+    this.merchantView.dispose();
     this.diagnostics?.dispose();
     this.playerView.dispose();
     for (const view of this.npcViews) view.dispose();
@@ -265,11 +287,22 @@ export class Game {
   }
 
   private readonly onKeyDown = (e: KeyboardEvent): void => {
+    if (e.code === 'KeyR' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !this.modalOpen) {
+      e.preventDefault(); this.openProfessions();
+    }
     if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
       e.preventDefault();
       if (!this.modalOpen) this.saveByHand();
     }
   };
+
+  private openProfessions(): void {
+    const npc = this.state.npcs.find((n) => n.id === this.interaction.focus?.id);
+    if (npc && npc.travelPhase === 'settled' && npc.job !== 'gatherer' && !npc.indoors) {
+      npc.attentionTimer = Math.max(npc.attentionTimer, NPC.attentionSeconds);
+      this.economyPanel.showProfessions(npc);
+    }
+  }
 
   /** The last chance to save on leaving, and hidden tabs may be closed without further notice. */
   private readonly onLeave = (): void => {
@@ -287,7 +320,10 @@ export class Game {
     this.movement.update(player, dt);
     this.dayNight.update(this.state.time, dt);
     this.dailyIncome.update();
+    this.foodSystem.update();
     this.constructionSystem.update(dt);
+    this.productionSystem.update(dt);
+    this.merchantSystem.update();
     this.npcSystem.update(dt);
     this.explorationSystem.update(dt);
     updateNotice(this.state, dt);
@@ -313,6 +349,10 @@ export class Game {
       }
 
       const horizon = this.rig.horizonZ;
+      const visitor = this.merchantSystem.npc;
+      this.merchantView.sync(alpha, frameDt, time, this.rig.isNearView(visitor.x, visitor.z, NPC.viewCullMargin));
+      this.kingdomView.update(horizon);
+      this.economyPanel.update(frameDt);
       sharedHorizonZ.value = horizon;
       const northZ = this.rig.visibleNorthZ;
       const southZ = this.rig.visibleSouthZ;

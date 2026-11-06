@@ -4,6 +4,7 @@ import type { Collider } from '../../world/WorldData';
 import { circleOverlapsCollider, type CollisionWorld } from '../CollisionWorld';
 import type { NavGrid } from '../navigation/NavGrid';
 import { advanceSite, applyBuildingEffect, assignWorkers } from './ConstructionState';
+import { workEfficiency } from '../economy/FoodSystem';
 
 const PLAYER_CLEARANCE = 0.5;
 
@@ -34,7 +35,7 @@ export class ConstructionSystem {
       if (site.workerId !== null) {
         for (let n = 0; n < npcs.length; n++) {
           if (npcs[n].id !== site.workerId) continue;
-          if (advanceSite(site, npcs[n], def.buildSeconds, dt)) {
+          if (advanceSite(site, npcs[n], def.buildSeconds, dt * workEfficiency(this.state))) {
             applyBuildingEffect(def, resources, village);
             postNotice(this.state, `${def.name} is finished. ${def.completedText}`);
           }

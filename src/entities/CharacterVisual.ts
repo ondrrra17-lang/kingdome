@@ -1,9 +1,9 @@
 import type { Object3D } from 'three';
 
 /** What the character is doing with their body, beyond walking. */
-export type CharacterPose = 'none' | 'chop' | 'gather' | 'build' | 'sit';
+export type CharacterPose = 'none' | 'chop' | 'gather' | 'build' | 'sit' | 'farm' | 'hunt';
 
-export type CharacterTool = 'none' | 'axe' | 'hammer';
+export type CharacterTool = 'none' | 'axe' | 'hammer' | 'hoe' | 'bow';
 
 /** Per-frame motion handed to a character's visual. */
 export interface CharacterMotion {
@@ -20,6 +20,7 @@ export interface CharacterMotion {
   pose: CharacterPose;
   /** Shows the carried load. */
   carrying: boolean;
+  produceLoad?: boolean;
   /** Which work tool to show in hand. */
   tool: CharacterTool;
 }

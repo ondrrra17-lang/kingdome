@@ -24,14 +24,19 @@ Clearing the browser's site data deletes the save. Saves do not move between bro
 | `player` | Position, facing, distance travelled |
 | `time` | Time of day, day number |
 | `economy` | Coins, wood, wood capacity |
+| `economy.food`, `economy.furs` | Food and furs in central storage |
+| `kingdom` | Last day charged for food, field stage and growth, merchant visit and schedule, authored event outcomes and request status |
 | `village` | Woodcutter limit, watch posts |
 | `exploration` | Ids of opened chests and discovered places |
 | `construction` | For each site by id: status, progress, builder's id |
 | `npcs` | For each villager by id: job, traveler phase, position, facing, indoors, carrying, wood delivered |
+| Production fields in `npcs` | Workplace id, partial hunting progress, carried food/furs, completed hunt count |
 
 **Not saved:** Three.js objects, animation, paths, timers, what a villager was doing at that
 moment, and the random stream. Views are rebuilt from the loaded state. Villagers decide what to
 do again within a moment of loading, and search for a new path from where they stand.
+Crop growth and hunting-cycle progress are saved separately from transient AI timers.
+Carried food and furs are deposited only when the worker physically reaches storage.
 
 ## How a save is loaded
 
@@ -56,6 +61,10 @@ Applying a save enforces the game's rules again rather than trusting the file:
 | Only possible jobs | Alda stays a gatherer, and only someone who began as a traveler can be one |
 | One builder per site, one site per builder | Handed out again. A site whose builder cannot return waits for another, keeping its progress |
 | Daily income | Not paid again on loading |
+| Food consumption | A saved high-water day prevents repeat deductions after reload or clock scrubbing. Forward skips consume for all elapsed days using the current settled population |
+| Production professions | One farmer per completed farm and one hunter per completed lodge; invalid or excess assignments return to unemployed |
+| Merchant | One visitor is reconstructed from saved phase and position; missed visits are skipped rather than replayed |
+| Event rewards | Cache and request completion are saved before another interaction can reward them again |
 | Valid positions | A player in a wall or the forest returns to the start. A villager moves to the nearest walkable spot |
 
 ## Damaged saves
@@ -84,6 +93,12 @@ The check for progress runs once per second.
 
 ## Changing the format
 
+The current format is **version 2**. The `1 → 2` migration preserves all old progress,
+adds 9 food and zero furs, starts food accounting on the saved day and leaves the new
+buildings unbuilt. It does not charge old games for food consumed before Phase 5 existed.
+The test fixture [e2e/fixtures/phase4-save.json](e2e/fixtures/phase4-save.json) was written
+by the preserved Phase 4.5 production build, and is loaded through the browser start screen.
+
 1. Raise `SAVE_VERSION` in [src/systems/save/SaveData.ts](src/systems/save/SaveData.ts).
 2. Add a step to `MIGRATIONS` that turns the old version's data into the new one. Steps run in order.
 3. Add the new values to `createSave`, `checkSave` and `applySave`, with a fallback for a missing value.
@@ -94,6 +109,8 @@ The check for progress runs once per second.
 - There is one save slot.
 - Position and work are restored, but not the exact moment: a woodcutter partway through chopping
   starts that tree again, and a villager in mid-stride stops and decides again.
+- Farmers keep field growth and hunters keep partial hunting progress, but resume by finding
+  a fresh route to the workplace. The exact animation pose is not saved.
 - A building's collider is added once nobody overlaps it, as during play, so someone saved inside
   a footprint keeps it walkable until they step out.
 - Two open tabs share one save, and the last to write wins.

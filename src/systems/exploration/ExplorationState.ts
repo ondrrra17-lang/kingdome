@@ -35,7 +35,7 @@ export function createExplorationState(): ExplorationState {
 }
 
 /** Pays out a treasure's fixed reward the first time only. Returns the coins gained. */
-export function openTreasure(treasure: TreasureState, def: TreasureDefinition, resources: ResourceState): number {
+export function openTreasure(treasure: TreasureState, def: TreasureDefinition, resources: Pick<ResourceState, 'coins'>): number {
   if (treasure.opened) return 0;
   treasure.opened = true;
   resources.coins += def.coins;

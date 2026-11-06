@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "savedAt": 1793991962851,
+  "player": {
+    "x": -16,
+    "z": 1.2,
+    "facing": 1.5707963267948966,
+    "distanceTravelled": 0
+  },
+  "time": {
+    "dayTime": 0.42,
+    "day": 7
+  },
+  "economy": {
+    "coins": 19,
+    "wood": 6,
+    "woodCapacity": 10
+  },
+  "village": {
+    "maxWoodcutters": 1,
+    "watchPosts": 0
+  },
+  "exploration": {
+    "openedTreasures": [
+      "chest-north-road"
+    ],
+    "discoveredLandmarks": [
+      "ruins"
+    ]
+  },
+  "construction": [
+    {
+      "id": "hut",
+      "status": "available",
+      "progress": 0,
+      "workerId": null
+    },
+    {
+      "id": "watchtower",
+      "status": "available",
+      "progress": 0,
+      "workerId": null
+    },
+    {
+      "id": "shed",
+      "status": "available",
+      "progress": 0,
+      "workerId": null
+    }
+  ],
+  "npcs": [
+    {
+      "id": "alda",
+      "job": "gatherer",
+      "travelPhase": "settled",
+      "x": -19.950000000000003,
+      "z": -0.9500000000000028,
+      "facing": 1.4459159136872897,
+      "indoors": false,
+      "carrying": false,
+      "woodDelivered": 0
+    },
+    {
+      "id": "bren",
+      "job": "villager",
+      "travelPhase": "settled",
+      "x": -5.950000000000003,
+      "z": 2.049999999999997,
+      "facing": 0.2667565549555353,
+      "indoors": false,
+      "carrying": false,
+      "woodDelivered": 0
+    },
+    {
+      "id": "cora",
+      "job": "villager",
+      "travelPhase": "settled",
+      "x": -6.950000000000003,
+      "z": -1.9500000000000028,
+      "facing": -0.43022854072276084,
+      "indoors": false,
+      "carrying": false,
+      "woodDelivered": 0
+    },
+    {
+      "id": "dunn",
+      "job": "villager",
+      "travelPhase": "settled",
+      "x": -0.9500000000000028,
+      "z": -1.9500000000000028,
+      "facing": -1.9481677077247883,
+      "indoors": false,
+      "carrying": false,
+      "woodDelivered": 0
+    },
+    {
+      "id": "edda",
+      "job": "villager",
+      "travelPhase": "settled",
+      "x": 12.049999999999997,
+      "z": 1.0499999999999972,
+      "facing": 2.026829899795116,
+      "indoors": false,
+      "carrying": false,
+      "woodDelivered": 0
+    },
+    {
+      "id": "wren",
+      "job": "traveler",
+      "travelPhase": "waiting",
+      "x": 64.05,
+      "z": -34.95,
+      "facing": 2.0275743744169015,
+      "indoors": false,
+      "carrying": false,
+      "woodDelivered": 0
+    },
+    {
+      "id": "tobin",
+      "job": "traveler",
+      "travelPhase": "waiting",
+      "x": 71.05,
+      "z": -35.95,
+      "facing": 2.4945394257513573,
+      "indoors": false,
+      "carrying": false,
+      "woodDelivered": 0
+    },
+    {
+      "id": "maren",
+      "job": "traveler",
+      "travelPhase": "waiting",
+      "x": -21.950000000000003,
+      "z": 29.049999999999997,
+      "facing": -2.3641513104029874,
+      "indoors": false,
+      "carrying": false,
+      "woodDelivered": 0
+    }
+  ]
+}

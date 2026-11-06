@@ -1,0 +1,44 @@
+{
+  "phase5-active-capped": {
+    "rounds": 3,
+    "loadMs": 1318,
+    "scenarios": [
+      {
+        "name": "Village, day",
+        "avgFps": 120.00466037515974,
+        "low1Fps": 117.6470588235294,
+        "avgFrameMs": 8.333009708737896,
+        "medianFrameMs": 8.300000000001091,
+        "worstFrameMs": 8.5,
+        "gpuMs": 4.512850174757281,
+        "cpuMs": 1.2380000017086665,
+        "simMs": 0.041474725303374815,
+        "drawCalls": 193,
+        "triangles": 150682,
+        "fpsPerRound": [
+          120,
+          120,
+          120
+        ]
+      },
+      {
+        "name": "Dense forest",
+        "avgFps": 120.00433048243242,
+        "low1Fps": 117.74600504625592,
+        "avgFrameMs": 8.333032616238722,
+        "medianFrameMs": 8.299999999999272,
+        "worstFrameMs": 8.5,
+        "gpuMs": 4.286667339805832,
+        "cpuMs": 1.0478333313266437,
+        "simMs": 0.028098127421396737,
+        "drawCalls": 174,
+        "triangles": 159720,
+        "fpsPerRound": [
+          120,
+          120,
+          120
+        ]
+      }
+    ]
+  }
+}

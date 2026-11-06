@@ -1,0 +1,80 @@
+{
+  "measuredOn": "2026-11-06",
+  "timezone": "Europe/Prague",
+  "baselineCommit": "d7b0f3667c15fb21073e6598bf846dfb9eec2ad7",
+  "cpu": "AMD Ryzen 5 3600",
+  "gpu": "NVIDIA GeForce GTX 1660",
+  "driverVersion": "32.0.15.9579",
+  "browser": "156.0.8078.81",
+  "node": "v22.13.1",
+  "viewport": {
+    "deviceScaleFactor": 1,
+    "width": 1920,
+    "height": 1080
+  },
+  "rounds": 3,
+  "stationarySeconds": 12,
+  "scenarios": [
+    "Village, day",
+    "Dense forest"
+  ],
+  "comparison": {
+    "freshGame": true,
+    "alternatesBuilds": true,
+    "file": "perf-phase5-compare.json",
+    "uncapped": true
+  },
+  "active": {
+    "builtSites": 5,
+    "visitingMerchant": 1,
+    "uncapped": true,
+    "woodcutter": 1,
+    "farmer": 1,
+    "hunter": 1,
+    "file": "perf-phase5-active.json"
+  },
+  "activeNormalPacing": {
+    "uncapped": false,
+    "file": "perf-phase5-active-capped.json"
+  },
+  "baselineAssets": [
+    {
+      "sha256": "695645F066AE93341FA27EE23BBD99A8D4290FDB62848D6553D4436AC969B9AA",
+      "file": "index-1ydmuePR.js"
+    }
+  ],
+  "phase5Assets": [
+    {
+      "sha256": "787FCF634216CEDFD0E111527ED2AD66D453E33BCEC36E1CBDD42B92D216C8CB",
+      "file": "index-03vQKG55.js"
+    }
+  ],
+  "fullE2EBuildAssets": [
+    {
+      "sha256": "7F6DD66D6BC36008B84C7AAA7CD641246A481235435D93AE599FE8B911D1AFC7",
+      "file": "index-CIcYnQEc.js"
+    }
+  ],
+  "webgl": {
+    "vendor": "Google Inc. (NVIDIA)",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 (0x00002184) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+  },
+  "uiCheckedViewports": [
+    {
+      "width": 1280,
+      "height": 800
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "validation": {
+    "unitTests": 128,
+    "fullBrowserTests": 49,
+    "fullBrowserDurationMs": 874390.446,
+    "browserRetries": 0,
+    "finalEventScenarioPassed": true,
+    "finalEventScenarioSeconds": 11.3
+  }
+}

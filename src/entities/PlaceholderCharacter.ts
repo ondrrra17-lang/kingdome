@@ -40,6 +40,9 @@ export class PlaceholderCharacter implements CharacterVisual {
   private readonly axe: Bone | null;
   private readonly hammer: Bone | null;
   private readonly load: Bone | null;
+  private readonly hoe: Bone | null;
+  private readonly bow: Bone | null;
+  private readonly sack: Bone | null;
   private readonly palette: CharacterPalette;
   /** Each joint's geometry, merged once they are all in place. */
   private readonly parts: { bone: Bone; geometry: BufferGeometry }[] = [];
@@ -91,18 +94,28 @@ export class PlaceholderCharacter implements CharacterVisual {
       this.axe = null;
       this.hammer = null;
       this.load = null;
+      this.hoe = this.bow = this.sack = null;
     } else {
       this.cape = null;
       this.axe = this.prop(this.armR, buildAxe());
       this.hammer = this.prop(this.armR, buildHammer());
       this.load = this.prop(this.torso, buildLogBundle());
+      this.hoe = this.prop(this.armR, new LowPolyBuilder()
+        .box(0.045, 1.05, 0.045, { at: [0, -0.4, 0.05], color: 0x94683e })
+        .box(0.32, 0.07, 0.16, { at: [0, -0.92, 0.12], color: 0x747c7d }).build());
+      this.bow = this.prop(this.armL, new LowPolyBuilder()
+        .box(0.045, 0.85, 0.05, { at: [0, -0.2, 0.18], rot: [0.2, 0, 0], color: 0x94683e })
+        .box(0.015, 0.84, 0.015, { at: [0, -0.2, 0.05], color: 0xd9c9b0 }).build());
+      this.sack = this.prop(this.torso, new LowPolyBuilder()
+        .box(0.48, 0.62, 0.32, { at: [-0.18, 0.32, -0.36], color: 0xb5a174 })
+        .box(0.3, 0.1, 0.26, { at: [-0.18, 0.66, -0.36], color: 0x786845 }).build());
     }
 
     this.hips.position.y = STAND_HIP_HEIGHT;
     this.mesh = this.buildMesh();
     this.object.add(this.mesh);
     // Tools and the load are out of sight until needed.
-    for (const hidden of [this.axe, this.hammer, this.load]) hidden?.scale.setScalar(0);
+    for (const hidden of [this.axe, this.hammer, this.load, this.hoe, this.bow, this.sack]) hidden?.scale.setScalar(0);
     // Slightly oversized against the props so characters read clearly at this zoom.
     this.object.scale.setScalar(CHARACTER_SCALE);
   }
@@ -115,7 +128,7 @@ export class PlaceholderCharacter implements CharacterVisual {
     const gait = Math.min(this.gait, 1);
     const sprint = clamp(this.gait - 1, 0, 1);
     this.sit = damp(this.sit, m.pose === 'sit' ? 1 : 0, 0.14, dt);
-    const working = m.pose === 'chop' || m.pose === 'gather' || m.pose === 'build';
+    const working = m.pose === 'chop' || m.pose === 'gather' || m.pose === 'build' || m.pose === 'farm' || m.pose === 'hunt';
     this.work = damp(this.work, working ? 1 : 0, 0.12, dt);
     const sit = this.sit;
     const work = this.work;
@@ -142,10 +155,15 @@ export class PlaceholderCharacter implements CharacterVisual {
       const rate = m.pose === 'chop' ? 0.85 : m.pose === 'build' ? 1.5 : 0.6;
       const phase = (m.time * rate) % 1;
       const strike = phase < 0.72 ? phase / 0.72 : 1 - (phase - 0.72) / 0.28;
-      if (m.pose === 'gather') {
+      if (m.pose === 'gather' || m.pose === 'farm') {
         workLean = 0.75;
         this.armL.rotation.x += work * (-0.9 - strike * 0.5);
         this.armR.rotation.x += work * (-0.9 - (1 - strike) * 0.5);
+      } else if (m.pose === 'hunt') {
+        workLean = 0.12;
+        this.armL.rotation.x += work * -1.5;
+        this.armR.rotation.x += work * (-1.1 - strike * 0.25);
+        this.armR.rotation.z += work * -0.65;
       } else if (m.pose === 'build') {
         // Short, quick hammer taps with the off hand steadying the work.
         workLean = 0.14;
@@ -175,8 +193,11 @@ export class PlaceholderCharacter implements CharacterVisual {
     }
     this.axe?.scale.setScalar(m.tool === 'axe' ? 1 : 0);
     this.hammer?.scale.setScalar(m.tool === 'hammer' ? 1 : 0);
+    this.hoe?.scale.setScalar(m.tool === 'hoe' && !m.carrying ? 1 : 0);
+    this.bow?.scale.setScalar(m.tool === 'bow' && !m.carrying ? 1 : 0);
+    this.sack?.scale.setScalar(m.carrying && m.produceLoad ? 1 : 0);
     if (this.load) {
-      this.load.scale.setScalar(m.carrying ? 1 : 0);
+      this.load.scale.setScalar(m.carrying && !m.produceLoad ? 1 : 0);
       // Carrying keeps one arm up, steadying the load.
       if (m.carrying) this.armL.rotation.x = -2.5;
     }

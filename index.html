@@ -42,6 +42,18 @@
       .hud-stat { display: inline-flex; align-items: center; gap: 5px; min-width: 38px; }
       .hud-stat[data-stat="wood"] { min-width: 62px; }
       .hud-stat svg { width: 17px; height: 17px; flex: none; }
+      .hud-label { font-size: 12px; }
+      .hud-food-warning { position: absolute; top: 100px; right: 16px; max-width: min(350px, calc(100vw - 32px)); padding: 8px 12px; background: rgba(80, 40, 22, 0.92); border-radius: 8px; color: #fff0d6; }
+      .hud-request { position: absolute; bottom: 20px; left: 16px; max-width: min(330px, calc(100vw - 32px)); padding: 8px 12px; background: rgba(30, 22, 16, 0.85); border-radius: 8px; font-size: 13px; }
+      #economy-panel { position: fixed; z-index: 8; right: 16px; top: 155px; width: min(350px, calc(100vw - 32px)); max-height: calc(100dvh - 185px); overflow: auto; box-sizing: border-box; padding: 20px; border: 1px solid #8c7554; border-radius: 12px; background: #2a2118; color: #f4ead6; font: 14px/1.5 Georgia, serif; scrollbar-color: #8c7554 #2a2118; }
+      #economy-panel[hidden] { display: none; }
+      #economy-panel h2 { margin: 0 0 8px; font-size: 23px; line-height: 1.2; }
+      #economy-panel p { margin: 0 0 16px; }
+      #economy-panel .save-button { display: block; width: 100%; margin-bottom: 8px; text-align: left; border-radius: 8px; font-size: 14px; }
+      #economy-panel .save-button:disabled { cursor: default; opacity: 1; color: #c4b398; background: #33291f; border-color: #66543e; font-size: 13px; }
+      #economy-panel .economy-result { margin-top: 16px; color: #f0d9a4; }
+      #economy-panel ::selection { background: #f0d9a4; color: #2a2118; }
+      @media (max-width: 620px) { .hud-status { max-width: calc(100vw - 36px); flex-wrap: wrap; gap: 7px; font-size: 13px; border-radius: 12px; } .hud-save { top: 90px; } .hud-food-warning { top: 135px; } #economy-panel { top: 190px; max-height: calc(100dvh - 210px); } .hud-notice { top: 190px; } }
       .hud-stat b { font-weight: 700; font-variant-numeric: tabular-nums; }
       .hud-stat.pulse b { animation: hud-pulse 0.75s ease-out; }
       .hud-day { padding-left: 12px; border-left: 1px solid rgba(244, 234, 214, 0.28); white-space: nowrap; }

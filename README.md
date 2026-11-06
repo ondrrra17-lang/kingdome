@@ -7,7 +7,8 @@ built, or leave the valley to look for treasure, old places and new villagers. P
 saved in the browser.
 Built with Three.js, TypeScript (strict) and Vite. No backend or paid services.
 
-There is no combat or advanced economy yet, by design.
+The village now has a small food economy, farming, hunting and a visiting merchant.
+There is no combat yet, by design.
 
 ## Install and run
 
@@ -20,7 +21,7 @@ npm run build      # type-check, then production build into dist/
 npm run preview    # serve the production build
 npm run typecheck  # type-check the game and the browser tests
 npm test           # unit and simulation tests, about 20 s
-npm run test:e2e   # browser tests with real key presses; measured 8.2 minutes
+npm run test:e2e   # browser tests with real key presses; timing in PHASE_5_REPORT.md
 npm run perf       # frame-rate benchmark of six scenarios; timing in PERFORMANCE_REPORT.md
 ```
 
@@ -45,6 +46,8 @@ Many tests depend on real time passing, so heavy load on the machine can make on
 | `W` / `S` (or `↑` / `↓`) | Walk in depth along Z |
 | `Shift` | Sprint |
 | `E` | Interact with what the ring highlights |
+| `R` | Choose a nearby settled villager's profession (or click **Professions**) |
+| `Esc` | Close the profession or trading panel |
 | `Ctrl+S` | Save (or the **Save** button at the top right) |
 
 Development builds, or a production build opened with `?debug`, add:
@@ -64,7 +67,7 @@ Cottage. Each trip adds 3 wood, up to the pile's limit. Coins, stored wood and t
 number are shown at the top right. The campfire, the wood pile and the house doors can
 also be used with `E`.
 
-Three marked building sites stand around the village. Walk up to one and press `E` to pay.
+Five marked building sites stand around the village. Walk up to one and press `E` to pay.
 The nearest free villager then walks over and builds it during daylight:
 
 | Building | Cost | Effect |
@@ -72,11 +75,57 @@ The nearest free villager then walks over and builds it during daylight:
 | Woodcutter's Hut | 4 wood, 2 coins | Allows one more woodcutter (one is allowed at first) |
 | Wooden Watchtower | 6 wood, 3 coins | Records a watch post for future defense; no combat yet |
 | Storage Shed | 5 wood, 2 coins | Raises the wood limit from 10 to 25 |
+| Small Farm | 5 wood, 2 coins | Workplace for one farmer |
+| Hunter's Lodge | 6 wood, 3 coins | Workplace for one hunter |
 
-The village pays 2 coins at the start of each new day, because the 5 starting coins alone
-cover only one or two buildings, and chests only pay once. This is a stopgap until there
-is a real economy. Set `ECONOMY.dailyCoins` to 0 to turn it off.
+The village still pays 2 coins at the start of each new day as a progression safety net.
+Trading now also provides renewable income. Set `ECONOMY.dailyCoins` to 0 to turn the
+allowance off; the default keeps it enabled for this phase.
 Alda already has a job gathering firewood for the campfire, and that does not go into storage.
+
+### Food, professions and trade
+
+New games start with 9 food. Each midnight the village consumes one food per three settled
+villagers, rounded up. The initial five villagers use 2 food per day. Waiting travelers and
+the merchant do not count. At zero food, work runs at 60% speed; nobody dies or leaves,
+and food production still works. A persistent warning explains the shortage.
+
+Stand near a settled villager and press `R`, or click **Professions**, to choose Unemployed,
+Woodcutter, Farmer or Hunter. Assignments are free. Farmers need a finished Small Farm;
+hunters need a finished Hunter's Lodge. Each has one slot. Builders are selected automatically
+from unemployed villagers. Finish a building assignment or deliver a carried load before
+changing that worker's profession. Alda keeps her campfire job.
+
+A farmer walks to the field, tends visibly growing crops, harvests 5 food and carries it to
+storage. A hunter visits authored forest hunting spots, then returns with 5 food; every third
+successful hunt also yields one fur. Work stops for evening routines and sleep. Partial crop
+growth and hunting progress survive interruptions and loading. Resources only arrive on delivery.
+
+Rowan enters from the west starting on day 3, walks to the market near the village fire,
+and visits approximately every three days. A visit lasts 0.65 game days after arrival.
+Stand nearby and press `E` to open the small trading panel:
+
+| Trade | Exchange |
+| --- | --- |
+| Sell wood | 5 wood for 2 coins |
+| Sell furs | 2 furs for 4 coins |
+| Buy food | 2 coins for 3 food |
+
+The world continues while the panel is open. Each click makes one validated exchange;
+unaffordable trades are disabled. `Esc` closes it. Prices, yields, work durations and visit
+timing live in `ECONOMY` and `KINGDOM` in `src/config.ts`.
+
+### Small world events
+
+- **Lost Supplies:** recover food and some wood from the abandoned cache beside the north
+  road near the ruins. The cache pays once; wood is limited by storage space.
+- **Traveler's Rumor:** talk to Wren before settling them to hear about an unopened chest
+  near an existing landmark. The rumor never points to a chest already opened.
+- **Village Request:** talk to Alda to accept a request for 3 wood, then talk again with the
+  wood to receive 2 coins. This authored request pays once.
+
+Event outcomes, current requests, merchant visits and all economic progress are saved.
+See [PHASE_5_REPORT.md](PHASE_5_REPORT.md) for validation and measured performance.
 
 ### Beyond the valley
 
@@ -184,6 +233,7 @@ src/
     interaction/  InteractionSystem, villageInteractables
     construction/ ConstructionState (rules), ConstructionSystem, siteInteractables
     exploration/  ExplorationState (rules, save data), ExplorationSystem, explorationInteractables
+    economy/      FoodSystem, ProductionSystem, Professions, MerchantSystem, WorldEvents
     save/         SaveData (format, checking, applying), SaveStore (storage), SaveSystem (when to save)
   entities/   Npc (state), NpcView, ActorView, CharacterVisual interface, PlaceholderCharacter
   world/      WorldData (pure layout), OpenField, Heightfield, Paths, ExplorationView and other views
@@ -216,16 +266,17 @@ Phase 4.5 uses skinned characters, visible terrain and river draw ranges, and ex
 instanced vegetation culling. World data stays resident and the simulation keeps running
 for off-screen villagers.
 
-See [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md) for current measurements, methodology,
-limitations and reproduction commands. The original pre-4.5 temporary build is unavailable
-on this computer, so there is no verified final before/after comparison or claimed FPS gain.
-Earlier results from another machine are not a baseline for this run.
+See [PHASE_5_REPORT.md](PHASE_5_REPORT.md) for the Phase 5 before/after comparison, active
+economy measurements, validation and limitations. Earlier Phase 4.5 measurements and
+methodology are archived in [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md).
 
 Run `npm run perf` to measure six scenarios on your machine. It uses a production build,
 1920 × 1080 at DPR 1, three rounds and uncapped frame pacing by default. Set `PERF_CAPPED=1`
 for normal browser pacing. Results are written to `test-results/perf-current.json` only
 when the run completes. Archive that file before another Playwright run clears the directory.
-The measured three-round run with normal pacing took 4.7 minutes on the report's machine,
-excluding compilation; runtime on other machines can differ.
+Use `PERF_ONLY='Village, day|Dense forest'` to measure just those two scenarios.
+`PERF_ECONOMY=1` starts a built and staffed Phase 5 village with a visiting merchant for
+an additional workload check; use it with the current build only. Runtime depends on the
+selected scenarios, rounds and machine.
 Open a development build, or a production build with `?debug`, for the diagnostics panel.
 Headless results can differ from a visible browser.

@@ -62,10 +62,11 @@ export class ActorView {
     this.character.dispose?.();
   }
 
-  setAction(pose: CharacterPose, carrying: boolean, tool: CharacterTool): void {
+  setAction(pose: CharacterPose, carrying: boolean, tool: CharacterTool, produceLoad = false): void {
     this.motion.pose = pose;
     this.motion.carrying = carrying;
     this.motion.tool = tool;
+    this.motion.produceLoad = produceLoad;
   }
 
   sync(actor: ActorState, alpha: number, frameDt: number, time: number): void {

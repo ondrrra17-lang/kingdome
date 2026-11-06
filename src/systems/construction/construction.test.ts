@@ -139,7 +139,7 @@ describe('worker assignment', () => {
     assignWorkers(sites, BUILDINGS, npcs);
     const ids = sites.map((s) => s.workerId).filter(Boolean);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids.length).toBe(3);
+    expect(ids.length).toBe(Math.min(BUILDINGS.length, npcs.filter((n) => n.job === 'villager').length));
     for (const n of npcs) {
       expect(sites.filter((s) => s.workerId === n.id).length).toBeLessThanOrEqual(1);
     }
@@ -154,7 +154,7 @@ describe('worker assignment', () => {
     sites.forEach((s, i) => fundSite(s, BUILDINGS[i].cost, r));
     assignWorkers(sites, BUILDINGS, npcs);
     const waiting = sites.filter((s) => s.workerId === null);
-    expect(waiting.length).toBe(1);
+    expect(waiting.length).toBe(BUILDINGS.length - 2);
     expect(waiting[0].status).toBe('funded');
 
     // When a worker finishes, the waiting site gets them.
@@ -371,7 +371,7 @@ describe('on the real world', () => {
     const outX = new Float32Array(NPC.maxWaypoints);
     const outZ = new Float32Array(NPC.maxWaypoints);
     BUILDINGS.forEach((b, i) => {
-      expect(collision.isBlocked(b.x, b.z, 0.3)).toBe(false);
+      expect(collision.isBlocked(b.x, b.z, 0.3), b.id).toBe(false);
       expect(nav.isWalkable(nav.cellAt(b.x, b.z))).toBe(true);
       const stand = sites.buildSites[i];
       expect(pathfinder.find(WORLD.campfire.x, WORLD.campfire.z + 4, stand.standX, stand.standZ, outX, outZ)).toBeGreaterThan(0);
@@ -394,7 +394,7 @@ describe('on the real world', () => {
     const { collision, nav, sites, pathfinder, npcs, state, construction, npcSystem } = realWorld();
     state.time.dayTime = 0.35;
     state.time.paused = true;
-    state.resources.wood = 15;
+    state.resources.wood = BUILDINGS.reduce((sum, b) => sum + b.cost.wood, 0);
     state.resources.woodCapacity = 50;
     state.resources.coins = 20;
     const free = npcs.filter((n) => n.job === 'villager').length;
@@ -419,7 +419,7 @@ describe('on the real world', () => {
     // A few more steps for anything still waiting to turn solid.
     for (let step = 0; step < 120; step++) { construction.update(dt); npcSystem.update(dt); }
 
-    expect(state.construction.map((s) => s.status)).toEqual(['completed', 'completed', 'completed']);
+    expect(state.construction.map((s) => s.status)).toEqual(BUILDINGS.map(() => 'completed'));
     expect(everWorkingAway).toBe(false);
     expect(distinctWorkersAtOnce).toBeGreaterThan(1);
     expect(state.resources.woodCapacity).toBeGreaterThan(50);
@@ -436,7 +436,7 @@ describe('on the real world', () => {
       expect(nav.isWalkable(nav.cellAt(b.x, b.z))).toBe(false);
       expect(pathfinder.find(WORLD.campfire.x, WORLD.campfire.z + 4, b.x, b.z, outX, outZ)).toBe(-1);
       // The spot used for the work is still usable afterward.
-      expect(nav.isReachable(nav.cellAt(sites.buildSites[i].standX, sites.buildSites[i].standZ))).toBe(true);
+      expect(nav.isReachable(nav.cellAt(sites.buildSites[i].standX, sites.buildSites[i].standZ)), b.id).toBe(true);
     });
     // And nothing else in the village was cut off.
     for (const door of sites.doors) {

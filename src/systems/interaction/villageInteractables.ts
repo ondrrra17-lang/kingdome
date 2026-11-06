@@ -1,4 +1,4 @@
-import { BUILDINGS, ECONOMY, INTERACTION, NPC, WORLD } from '../../config';
+import { BUILDINGS, ECONOMY, INTERACTION, KINGDOM, NPC, WORLD } from '../../config';
 import type { GameState } from '../../core/GameState';
 import type { NpcState } from '../../entities/Npc';
 import { houseDoorPoint } from '../../world/WorldData';
@@ -6,6 +6,7 @@ import { routinePhase } from '../npc/schedule';
 import { canBeRecruited, hasWoodcutterSlot, inviteTraveler, recruitWoodcutter } from '../Recruitment';
 import { createSiteInteractables } from '../construction/siteInteractables';
 import type { Interactable } from './InteractionSystem';
+import { hearRumor, villageRequest } from '../economy/WorldEvents';
 
 function names(list: readonly NpcState[]): string {
   const all = list.map((npc) => npc.name);
@@ -48,10 +49,15 @@ function villager(npc: NpcState, state: GameState): Interactable {
       return `Talk to ${npc.name}`;
     },
     interact() {
-      if (npc.travelPhase !== 'settled') return talkToTraveler(npc, state);
+      if (npc.travelPhase !== 'settled') {
+        const response = talkToTraveler(npc, state);
+        return npc.id === KINGDOM.events.rumor.speaker ? `${response} ${hearRumor(state)}` : response;
+      }
       npc.attentionTimer = NPC.attentionSeconds;
+      if (npc.id === KINGDOM.events.request.speaker) return villageRequest(state);
       if (npc.job === 'gatherer') return `${npc.name}: "Somebody has to keep that fire going."`;
       if (npc.assignedSite >= 0) return `${npc.name} is building the ${BUILDINGS[npc.assignedSite].name}.`;
+      if (npc.job === 'farmer' || npc.job === 'hunter') return `${npc.name} is a ${npc.job}${npc.carrying ? ', carrying food to storage' : npc.task === 'produce' ? ', working at the workplace' : ', following the daily routine'}. Press R to change profession.`;
       if (npc.job === 'woodcutter') {
         return `${npc.name} ${describeWork(npc)}. Delivered so far: ${npc.woodDelivered} wood.`;
       }

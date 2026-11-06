@@ -29,7 +29,7 @@ export function hasWoodcutterSlot(limits: VillageLimits, npcs: readonly NpcState
 }
 
 /** Pays a traveler to set off for the village. On failure nothing changes. */
-export function inviteTraveler(npc: NpcState, resources: ResourceState): InviteResult {
+export function inviteTraveler(npc: NpcState, resources: Pick<ResourceState, 'coins'>): InviteResult {
   if (npc.travelPhase !== 'waiting') return 'not-available';
   if (!trySpendCoins(resources, ECONOMY.travelerInviteCost)) return 'no-coins';
   npc.travelPhase = 'journey';
