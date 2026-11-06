@@ -20,8 +20,8 @@ npm run build      # type-check, then production build into dist/
 npm run preview    # serve the production build
 npm run typecheck  # type-check the game and the browser tests
 npm test           # unit and simulation tests, about 20 s
-npm run test:e2e   # browser tests with real key presses, about 9 minutes
-npm run perf       # frame-rate benchmark of six scenarios, about 7 minutes
+npm run test:e2e   # browser tests with real key presses; measured 8.2 minutes
+npm run perf       # frame-rate benchmark of six scenarios; timing in PERFORMANCE_REPORT.md
 ```
 
 ### Browser tests
@@ -212,67 +212,20 @@ the seams for adding one:
 
 ## Performance
 
-The diagnostics panel measures frame time, 1% lows, CPU submission time, simulation time,
-draw calls, triangles and live GPU resources.
+Phase 4.5 uses skinned characters, visible terrain and river draw ranges, and existing
+instanced vegetation culling. World data stays resident and the simulation keeps running
+for off-screen villagers.
 
-Measured on the production build in Chrome 156 (headless, 60 Hz frame pacing) on an
-**Intel integrated GPU** (D3D11), the only hardware tested so far:
+See [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md) for current measurements, methodology,
+limitations and reproduction commands. The original pre-4.5 temporary build is unavailable
+on this computer, so there is no verified final before/after comparison or claimed FPS gain.
+Earlier results from another machine are not a baseline for this run.
 
-| Scenario | Avg FPS | 1% low | Draw calls | Triangles |
-| --- | --- | --- | --- | --- |
-| 1920×1080, pixel ratio 1, in the village | 60.0 | 58.5 | 192 | 123k |
-| 1920×1080, pixel ratio 1, sprinting | 60.0 | 58.6 | 94 | 115k |
-| 1920×1080, pixel ratio 1, day sweep (6 times of day) | 59.3–60.0 | 29.9–58.5 | 128–212 | 109–143k |
-| 1920×1080, pixel ratio 2, in the village (4 runs) | 37–44 | 9–22 | 192 | 123k |
-| 1920×1080, pixel ratio 2, sprinting (4 runs) | 41–44 | 10–18 | 92 | 115k |
-
-- The 60 FPS results are capped by frame pacing, so the headroom above 60 is unknown.
-- In the day sweep, one time of day (noon) had a 1% low of 29.9; the other five stayed at
-  57.8 or above. The cause was not investigated.
-- At pixel ratio 2 (3840×2160 rendered) this integrated GPU misses the 60 FPS target, with
-  visible dips. Hiding all construction visuals made no measurable difference in a side-by-side
-  run, so these are not the cause. To trade sharpness for speed, lower
-  `RENDER.maxPixelRatio` in `src/config.ts`. A discrete GPU has not been measured.
-- JS submission time was about 1.5–2.1 ms per frame at pixel ratio 1.
-- A five-day simulated run with one woodcutter stayed under one path search per second.
-
-### After the forest expansion
-
-Measured by alternating the previous build and this one in the same browser session, so that
-background load affects both. The machine was busy for most of this, so results vary a lot:
-
-| 1920×1080, pixel ratio 1 | Avg FPS | 1% low | Draw calls | Triangles |
-| --- | --- | --- | --- | --- |
-| Previous build, in the village (3 runs) | 37.3–59.3 | 8.5–27.9 | 186 | 118k |
-| This build, in the village (3 runs) | 38.6–60.0 | 13.3–58.7 | 277 | 218k |
-| Previous build, sprinting (3 runs) | 26.4–56.7 | 9.7–27.2 | 86 | 109k |
-| This build, sprinting (3 runs) | 41.3–60.0 | 13.7–58.5 | 161 | 174k |
-
-On a quiet machine, this build (one `npm run perf` run, 6 seconds per place unless noted):
-
-| 1920×1080, pixel ratio 1 | Avg FPS | 1% low | Draw calls | Triangles |
-| --- | --- | --- | --- | --- |
-| Village | 60.0 | 58.1 | 277 | 218k |
-| Sprinting along the road, 9 s | 60.0 | 58.3 | 161 | 174k |
-| Six of the seven new-area spots | 60.0 | 57.7–58.7 | 173–295 | 170–268k |
-| Abandoned Camp | 60.0 | 53.9 | 208 | 228k |
-| First sprint north to the ruins, 5 s | 59.2 | 29.9 | 198 | 196k |
-
-The 60 FPS results are capped by frame pacing, so the headroom above 60 is unknown. The previous
-build was not measured on this quiet run, so the comparison rests on the busy runs above.
-
-- No slowdown showed up against the previous build, but the machine's load was too uneven to
-  show a small one. Draw calls and triangles did go up, by about half and about 80% in the village.
-- The new areas, one 6-second run each: 55.8–60.0 FPS, 1% lows 25.5–57.7, 170–268k triangles,
-  173–295 draw calls. The lowest were the woods trail and the glade, the two densest views.
-  Sprinting from the village to the ruins for the first time: 60.0 FPS, 1% low 54.9.
-- The longest path searches, across the whole map and the bridge, took at most 2.5 ms, and at
-  most one runs per simulation step. Building the world at startup takes about 0.3 s under Node.
-- At pixel ratio 2 this build ran at 37–46 FPS with 1% lows of 15–23, against 25–46 and 8–20
-  for the previous build. Still under the 60 FPS target on this GPU.
-- Instanced forest is split into chunks by X and depth. Batches past the horizon are skipped,
-  all forest buffers go to the GPU at startup, and travelers waiting more than 48 units from
-  the player are neither simulated nor drawn. Off-screen villagers are simulated but not drawn.
-
-To measure on your own machine, run `npm run perf`, or open a dev build (or a production
-build with `?debug`) and read the panel. Headless numbers may differ from a normal browser window.
+Run `npm run perf` to measure six scenarios on your machine. It uses a production build,
+1920 × 1080 at DPR 1, three rounds and uncapped frame pacing by default. Set `PERF_CAPPED=1`
+for normal browser pacing. Results are written to `test-results/perf-current.json` only
+when the run completes. Archive that file before another Playwright run clears the directory.
+The measured three-round run with normal pacing took 4.7 minutes on the report's machine,
+excluding compilation; runtime on other machines can differ.
+Open a development build, or a production build with `?debug`, for the diagnostics panel.
+Headless results can differ from a visible browser.

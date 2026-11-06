@@ -1,0 +1,116 @@
+{
+  "final-current-capped": {
+    "rounds": 3,
+    "loadMs": 1311,
+    "scenarios": [
+      {
+        "name": "Village, day",
+        "avgFps": 120.00433048243188,
+        "low1Fps": 117.94439764110771,
+        "avgFrameMs": 8.333032616238759,
+        "medianFrameMs": 8.300000000001091,
+        "worstFrameMs": 8.5,
+        "gpuMs": 4.493103667128985,
+        "cpuMs": 1.277833330531915,
+        "simMs": 0.033859702313316385,
+        "drawCalls": 188,
+        "triangles": 145201,
+        "fpsPerRound": [
+          120,
+          120,
+          120
+        ]
+      },
+      {
+        "name": "Village, night",
+        "avgFps": 120.00366169286715,
+        "low1Fps": 117.94439764110771,
+        "avgFrameMs": 8.333079056865467,
+        "medianFrameMs": 8.30000000000291,
+        "worstFrameMs": 8.5,
+        "gpuMs": 4.286743278779479,
+        "cpuMs": 1.1851666631301243,
+        "simMs": 0.029364293544341072,
+        "drawCalls": 176,
+        "triangles": 142297,
+        "fpsPerRound": [
+          120,
+          120,
+          120
+        ]
+      },
+      {
+        "name": "Dense forest",
+        "avgFps": 120.00333111259161,
+        "low1Fps": 117.84511784511496,
+        "avgFrameMs": 8.333102012491326,
+        "medianFrameMs": 8.30000000000291,
+        "worstFrameMs": 8.5,
+        "gpuMs": 4.3212407212205255,
+        "cpuMs": 1.1031666710972785,
+        "simMs": 0.0229394400024862,
+        "drawCalls": 167,
+        "triangles": 154199,
+        "fpsPerRound": [
+          120,
+          120,
+          120
+        ]
+      },
+      {
+        "name": "Quiet Glade",
+        "avgFps": 120.00366169286715,
+        "low1Fps": 117.6470588235294,
+        "avgFrameMs": 8.333079056865467,
+        "medianFrameMs": 8.30000000000291,
+        "worstFrameMs": 8.69999999999709,
+        "gpuMs": 4.313243694868239,
+        "cpuMs": 1.1160000003377597,
+        "simMs": 0.019945969376913834,
+        "drawCalls": 171,
+        "triangles": 201650,
+        "fpsPerRound": [
+          120,
+          120,
+          120
+        ]
+      },
+      {
+        "name": "Old Ruins",
+        "avgFps": 120.00433048243232,
+        "low1Fps": 117.7460050462487,
+        "avgFrameMs": 8.333032616238729,
+        "medianFrameMs": 8.30000000000291,
+        "worstFrameMs": 8.5,
+        "gpuMs": 4.283136155447608,
+        "cpuMs": 1.0421666734417279,
+        "simMs": 0.024931794765173855,
+        "drawCalls": 161,
+        "triangles": 130135,
+        "fpsPerRound": [
+          120,
+          120,
+          120
+        ]
+      },
+      {
+        "name": "Travel between regions",
+        "avgFps": 120.00411369216725,
+        "low1Fps": 117.72400261608222,
+        "avgFrameMs": 8.333047670058919,
+        "medianFrameMs": 8.30000000000291,
+        "worstFrameMs": 8.5,
+        "gpuMs": 4.280156469201928,
+        "cpuMs": 1.2121666664878528,
+        "simMs": 0.024716828800088114,
+        "drawCalls": 216,
+        "triangles": 180505,
+        "fpsPerRound": [
+          120,
+          120,
+          120
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+    "measuredOn":  "2026-11-06",
+    "timezone":  "Europe/Prague",
+    "sourceCommit":  "128e5aa0e1661c03862d9f403cdb7131f400e524",
+    "baselineAvailable":  false,
+    "cpu":  "AMD Ryzen 5 3600",
+    "gpu":  "NVIDIA GeForce GTX 1660",
+    "driverVersion":  "32.0.15.9579",
+    "browser":  "Google Chrome 156.0.8078.81",
+    "node":  "22.13.1",
+    "viewport":  {
+                     "deviceScaleFactor":  1,
+                     "width":  1920,
+                     "height":  1080
+                 },
+    "uncapped":  {
+                     "stationarySeconds":  15,
+                     "runnerInterruptedDuringTeardown":  true,
+                     "measurementCompleted":  true,
+                     "rounds":  5,
+                     "travelSeconds":  15.5,
+                     "file":  "perf-final-current.json"
+                 },
+    "normalPacing":  {
+                         "reporterDuration":  "4.7m",
+                         "stationarySeconds":  12,
+                         "rounds":  3,
+                         "runnerExitCode":  0,
+                         "travelSeconds":  15.5,
+                         "file":  "perf-final-current-capped.json"
+                     },
+    "buildAssets":  [
+                        {
+                            "sha256":  "695645F066AE93341FA27EE23BBD99A8D4290FDB62848D6553D4436AC969B9AA",
+                            "file":  "index-1ydmuePR.js"
+                        }
+                    ]
+}
