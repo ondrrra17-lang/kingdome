@@ -36,10 +36,15 @@ test('a first visit has no start screen, and saving shows a confirmation', async
 test('save and reload brings back position, time, resources and discoveries', async ({ game, page }) => {
   await page.evaluate(() => {
     const { state } = window.__game;
-    state.resources.coins = 23;
-    state.resources.wood = 7;
     state.time.day = 3;
     state.time.dayTime = 0.61;
+  });
+  // Moving the clock to a new day pays that day's income, so coins are set after it.
+  await expect.poll(async () => (await game.hud()).coins).toBe(7);
+  await page.evaluate(() => {
+    const { state } = window.__game;
+    state.resources.coins = 23;
+    state.resources.wood = 7;
   });
   await game.teleport(3, -35);
   await expect.poll(async () => (await game.hud()).notice).toMatch(/Old Ruins/);
