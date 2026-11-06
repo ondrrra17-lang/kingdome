@@ -1,0 +1,27 @@
+{
+  "name": "emberwick-vale",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A 2.5D medieval fantasy environment prototype built with Three.js, TypeScript and Vite.",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p e2e",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:e2e": "playwright test --project=game",
+    "perf": "playwright test --project=perf"
+  },
+  "dependencies": {
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^26.6.6",
+    "@types/three": "^0.187.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}
