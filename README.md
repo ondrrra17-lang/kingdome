@@ -2,8 +2,9 @@
 
 A playable 2.5D medieval fantasy prototype: a small living village in a forest valley,
 seen under an orthographic camera through a full day/night cycle. Five villagers follow
-their own routines. Hire them to bring in wood, pay for new buildings and watch them get
-built, or leave the valley to look for treasure, old places and new villagers.
+their own routines. Set them to bringing in wood, pay for new buildings and watch them get
+built, or leave the valley to look for treasure, old places and new villagers. Progress is
+saved in the browser.
 Built with Three.js, TypeScript (strict) and Vite. No backend or paid services.
 
 There is no combat or advanced economy yet, by design.
@@ -19,8 +20,8 @@ npm run build      # type-check, then production build into dist/
 npm run preview    # serve the production build
 npm run typecheck  # type-check the game and the browser tests
 npm test           # unit and simulation tests, about 20 s
-npm run test:e2e   # browser tests with real key presses, about 6 minutes
-npm run perf       # prints frame rates around the map
+npm run test:e2e   # browser tests with real key presses, about 9 minutes
+npm run perf       # frame-rate benchmark of six scenarios, about 7 minutes
 ```
 
 ### Browser tests
@@ -44,6 +45,7 @@ Many tests depend on real time passing, so heavy load on the machine can make on
 | `W` / `S` (or `↑` / `↓`) | Walk in depth along Z |
 | `Shift` | Sprint |
 | `E` | Interact with what the ring highlights |
+| `Ctrl+S` | Save (or the **Save** button at the top right) |
 
 Development builds, or a production build opened with `?debug`, add:
 
@@ -56,8 +58,8 @@ Development builds, or a production build opened with `?debug`, add:
 
 ## How to play
 
-You start with 5 coins. Walk up to a villager and press `E` to hire them as a woodcutter
-for 2 coins. They find a tree, chop it, and carry the logs to the wood pile beside Alder
+You start with 5 coins. Walk up to a villager and press `E` to make them a woodcutter, which
+is free. They find a tree, chop it, and carry the logs to the wood pile beside Alder
 Cottage. Each trip adds 3 wood, up to the pile's limit. Coins, stored wood and the day
 number are shown at the top right. The campfire, the wood pile and the house doors can
 also be used with `E`.
@@ -72,7 +74,7 @@ The nearest free villager then walks over and builds it during daylight:
 | Storage Shed | 5 wood, 2 coins | Raises the wood limit from 10 to 25 |
 
 The village pays 2 coins at the start of each new day, because the 5 starting coins alone
-cover only one hire and one building, and chests only pay once. This is a stopgap until there
+cover only one or two buildings, and chests only pay once. This is a stopgap until there
 is a real economy. Set `ECONOMY.dailyCoins` to 0 to turn it off.
 Alda already has a job gathering firewood for the campfire, and that does not go into storage.
 
@@ -98,7 +100,15 @@ the paths and others are off them, and a slow glint helps to spot them.
 Three travelers wait in the forest: Wren and Tobin at the Travelers' Camp, Maren at the
 shrine. Inviting one costs 2 coins. They walk to the village on their own, day or night, and
 only count as villagers when they get there. From then on they are ordinary villagers who
-can build or be hired as woodcutters, which is a separate 2 coins.
+can build or be made woodcutters, at no further cost.
+
+### Saving
+
+The game saves by itself every 30 seconds, soon after anything significant, and when the page
+is hidden or closed. On your next visit the start screen offers **Continue Game** and
+**New Game**. New Game always asks first. Saves stay in this browser, so clearing its site data
+deletes them. See [SAVE_SYSTEM.md](SAVE_SYSTEM.md) for what is saved and how damaged saves are
+handled.
 
 ## What is implemented
 
@@ -123,8 +133,9 @@ can build or be hired as woodcutters, which is a separate 2 coins.
 - **Forest edge:** one signed-distance field (`OpenField`) says where the forest is open.
   Collision, scatter, terrain and ground color all read it. The valley's own scatter comes
   from its original random stream, so it stayed in place when the map grew.
-- **Exploration:** chests and discovered places are plain state keyed by stable ids, with
-  `saveExploration` and `loadExploration` ready for a future save system.
+- **Exploration:** chests and discovered places are plain state keyed by stable ids.
+- **Saving:** one versioned JSON save in `localStorage`, with a backup of the save before it.
+  Loading checks every value and applies the game's rules again.
 - **Travelers:** the same NPC state, navigation and interaction as villagers. The river can
   still only be crossed on the bridge.
 - **Scenery:** instanced trees, bushes, rocks, grass and flowers, plus three parallax
@@ -157,7 +168,6 @@ Known simplifications, all deliberate for this milestone:
 - Trees are not used up by chopping, and villagers go in and out of doors without an animation.
 - Far to the south the view looks down at the ground and the village rather than the sky.
 - Trees and props grow out of the ground as they cross the horizon, instead of being cut in half.
-- Save and load functions exist for exploration only. There is no save system yet.
 - Forest thinner than the edge's own width, between two nearby openings, can be stepped through.
 
 ## Project layout
@@ -166,7 +176,7 @@ Known simplifications, all deliberate for this milestone:
 e2e/          Browser tests (Playwright), one spec per area, and perf.spec.ts
 src/
   config.ts   Every tunable constant: feel, camera, layout, atmosphere, palette
-  main.ts     Boot, WebGL failure message, hot-reload disposal
+  main.ts     Boot, start screen, WebGL failure message, hot-reload disposal
   core/       Game (composition root), GameLoop, GameState, Input, math, disposal
   systems/    PlayerMovementSystem, CollisionWorld, DayNightSystem, Resources, Recruitment
     npc/          NpcSystem, NpcBrain (state machine), NpcLocomotion, schedule, VillageSites
@@ -174,10 +184,11 @@ src/
     interaction/  InteractionSystem, villageInteractables
     construction/ ConstructionState (rules), ConstructionSystem, siteInteractables
     exploration/  ExplorationState (rules, save data), ExplorationSystem, explorationInteractables
+    save/         SaveData (format, checking, applying), SaveStore (storage), SaveSystem (when to save)
   entities/   Npc (state), NpcView, ActorView, CharacterVisual interface, PlaceholderCharacter
   world/      WorldData (pure layout), OpenField, Heightfield, Paths, ExplorationView and other views
     placeholders/   Procedural prop, location and vegetation geometry
-  rendering/  RendererHost, CameraRig, AtmosphereView, SkyView, HudView, Diagnostics, helpers
+  rendering/  RendererHost, CameraRig, AtmosphereView, SkyView, HudView, SaveView, Diagnostics, helpers
 ```
 
 **State and visuals are separate.** `GameState` and `WorldData` contain plain data and

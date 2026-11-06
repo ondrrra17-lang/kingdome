@@ -3,7 +3,7 @@ import { postNotice, type GameState } from '../core/GameState';
 
 /**
  * A small village tithe at each new day. Without any income the 5 starting coins
- * cover only one hire and one building. Set ECONOMY.dailyCoins to 0 to turn it off.
+ * cover only one or two buildings. Set ECONOMY.dailyCoins to 0 to turn it off.
  */
 export class DailyIncome {
   /** Highest day already paid, so scrubbing the debug clock back and forth pays once. */
