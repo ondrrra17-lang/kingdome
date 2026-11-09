@@ -3,8 +3,10 @@ import { PALETTE, WORLD } from '../config';
 import { lerp } from '../core/math';
 import type { AtmosphereSample } from '../systems/DayNightSystem';
 import { CampfireView } from './CampfireView';
-import { buildBarrier, buildBridge, buildFence, buildHouse, buildLanternPost, buildWoodpile } from './placeholders/props';
+import { buildBarrier, buildFence, buildHouse, buildLanternPost, buildWoodpile } from './placeholders/props';
 import type { WorldData } from './WorldData';
+import type { GameState } from '../core/GameState';
+import { BridgeView } from './BridgeView';
 
 const windowDay = new Color(PALETTE.windowDay);
 const windowNight = new Color(PALETTE.windowNight);
@@ -23,8 +25,9 @@ export class SettlementView {
   private readonly lanternGlowMaterial: SpriteMaterial;
   private readonly lanternGlows: Sprite[] = [];
   private readonly campfire: CampfireView;
+  private readonly bridge: BridgeView;
 
-  constructor(world: WorldData, glowTexture: Texture, pixelRatio: number) {
+  constructor(world: WorldData, glowTexture: Texture, pixelRatio: number, state: GameState) {
     const solid = new MeshLambertMaterial({ vertexColors: true });
     const addSolid = (geometry: BufferGeometry, material: Material = solid): Mesh => {
       const mesh = new Mesh(geometry, material);
@@ -46,8 +49,8 @@ export class SettlementView {
       }
     });
 
-    const { x: bridgeX, z: bridgeZ } = WORLD.bridge;
-    addSolid(buildBridge((localX) => world.deckHeight(localX + bridgeX), 200)).position.set(bridgeX, 0, bridgeZ);
+    this.bridge = new BridgeView(world, state);
+    this.group.add(this.bridge.group);
 
     WORLD.fences.forEach((f, i) => {
       const dx = f.x2 - f.x1;
@@ -103,6 +106,7 @@ export class SettlementView {
   }
 
   update(sample: AtmosphereSample, time: number): void {
+    this.bridge.update();
     const night = sample.night;
     this.windowMaterial.color.lerpColors(windowDay, windowNight, night);
     this.lanternMaterial.color.lerpColors(lanternDay, lanternNight, night);

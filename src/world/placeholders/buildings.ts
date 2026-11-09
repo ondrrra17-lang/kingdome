@@ -256,6 +256,7 @@ function watchtower(def: BuildingDefinition, seed: number): StructureGeometry {
 
 export function buildStructure(def: BuildingDefinition, seed: number): StructureGeometry {
   switch (def.style) {
+    case 'bridge': return { geometry: new LowPolyBuilder().build(), pieceEnds: [] };
     case 'farm': return farm(def);
     case 'lodge': return hut(def, seed);
     case 'hut': return hut(def, seed);

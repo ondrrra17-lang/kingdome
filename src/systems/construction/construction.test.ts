@@ -390,7 +390,7 @@ describe('on the real world', () => {
     }
   });
 
-  it('a villager physically walks over, builds all three, and the world updates', () => {
+  it('villagers physically build every site and the world updates', () => {
     const { collision, nav, sites, pathfinder, npcs, state, construction, npcSystem } = realWorld();
     state.time.dayTime = 0.35;
     state.time.paused = true;
@@ -427,11 +427,16 @@ describe('on the real world', () => {
     expect(state.village.watchPosts).toBe(1);
     expect(npcs.every((n) => n.assignedSite === -1)).toBe(true);
 
-    // Collision and navigation now treat all three as solid.
-    expect(state.construction.every((s) => s.solid)).toBe(true);
+    // Structures become solid; a repaired bridge stays walkable.
+    expect(state.construction.every((s) => s.id === 'bridge' ? !s.solid : s.solid)).toBe(true);
     const outX = new Float32Array(NPC.maxWaypoints);
     const outZ = new Float32Array(NPC.maxWaypoints);
     BUILDINGS.forEach((b, i) => {
+      if (b.style === 'bridge') {
+        expect(collision.isBlocked(b.x, b.z, 0.1)).toBe(false);
+        expect(nav.isReachable(nav.cellAt(b.x, b.z))).toBe(true);
+        return;
+      }
       expect(collision.isBlocked(b.x, b.z, 0.1)).toBe(true);
       expect(nav.isWalkable(nav.cellAt(b.x, b.z))).toBe(false);
       expect(pathfinder.find(WORLD.campfire.x, WORLD.campfire.z + 4, b.x, b.z, outX, outZ)).toBe(-1);

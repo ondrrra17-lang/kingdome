@@ -43,6 +43,14 @@
       .hud-stat[data-stat="wood"] { min-width: 62px; }
       .hud-stat svg { width: 17px; height: 17px; flex: none; }
       .hud-label { font-size: 12px; }
+      .hud-goal { position: absolute; top: 16px; left: 16px; width: min(265px, calc(100vw - 32px)); box-sizing: border-box;
+        padding: 12px 14px; border: 1px solid rgba(244, 234, 214, 0.28); border-radius: 12px; background: rgba(30, 22, 16, 0.88); }
+      .hud-goal h2 { margin: 0 0 6px; color: #f0d9a4; font-size: 17px; font-weight: 500; }
+      .hud-goal p { margin: 0; font-size: 13px; line-height: 1.5; color: #f4ead6; }
+      .hud-goal.complete h2 { color: #c6db9b; }
+      @media (max-width: 900px) { .hud-goal { top: 170px; } }
+      @media (max-width: 620px) { .hud-goal { top: 245px; width: min(265px, calc(100vw - 32px)); } }
+      body:has(#economy-panel:not([hidden])) .hud-goal { visibility: hidden; }
       .hud-food-warning { position: absolute; top: 100px; right: 16px; max-width: min(350px, calc(100vw - 32px)); padding: 8px 12px; background: rgba(80, 40, 22, 0.92); border-radius: 8px; color: #fff0d6; }
       .hud-request { position: absolute; bottom: 20px; left: 16px; max-width: min(330px, calc(100vw - 32px)); padding: 8px 12px; background: rgba(30, 22, 16, 0.85); border-radius: 8px; font-size: 13px; }
       #economy-panel { position: fixed; z-index: 8; right: 16px; top: 155px; width: min(350px, calc(100vw - 32px)); max-height: calc(100dvh - 185px); overflow: auto; box-sizing: border-box; padding: 20px; border: 1px solid #8c7554; border-radius: 12px; background: #2a2118; color: #f4ead6; font: 14px/1.5 Georgia, serif; scrollbar-color: #8c7554 #2a2118; }

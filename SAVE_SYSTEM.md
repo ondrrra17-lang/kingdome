@@ -29,6 +29,7 @@ Clearing the browser's site data deletes the save. Saves do not move between bro
 | `village` | Woodcutter limit, watch posts |
 | `exploration` | Ids of opened chests and discovered places |
 | `construction` | For each site by id: status, progress, builder's id |
+| `construction` entry `bridge` | Repair payment/status, partial progress and builder; completion opens the east bank |
 | `npcs` | For each villager by id: job, traveler phase, position, facing, indoors, carrying, wood delivered |
 | Production fields in `npcs` | Workplace id, partial hunting progress, carried food/furs, completed hunt count |
 
@@ -47,6 +48,13 @@ Carried food and furs are deposited only when the worker physically reaches stor
    up as if it had always been so.
 3. **The first simulation step** adds finished buildings to collision and navigation, through
    the same code as during play.
+
+The bridge uses the opposite rule: an unfinished crossing installs a temporary collision and
+navigation barrier before play starts. Completion removes it and refreshes connected regions
+and NPC routes. Loading completed repairs never installs the barrier. The opening objective
+is derived from the saved bridge status and discovery of `traveler-camp`; there is no second
+quest flag to get out of sync. A player position on the closed crossing or east bank in a
+damaged version 3 save falls back to the village spawn.
 
 Applying a save enforces the game's rules again rather than trusting the file:
 
@@ -93,9 +101,12 @@ The check for progress runs once per second.
 
 ## Changing the format
 
-The current format is **version 2**. The `1 → 2` migration preserves all old progress,
+The current format is **version 3**. The `1 → 2` migration preserves all old progress,
 adds 9 food and zero furs, starts food accounting on the saved day and leaves the new
 buildings unbuilt. It does not charge old games for food consumed before Phase 5 existed.
+The `2 → 3` migration records the Old Bridge as completed, since it was already passable
+in those games. It preserves eastern player/NPC positions, inventory and discoveries,
+without charging repair materials. New games instead begin with the bridge unrepaired.
 The test fixture [e2e/fixtures/phase4-save.json](e2e/fixtures/phase4-save.json) was written
 by the preserved Phase 4.5 production build, and is loaded through the browser start screen.
 

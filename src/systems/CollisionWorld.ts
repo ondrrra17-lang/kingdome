@@ -60,6 +60,15 @@ export class CollisionWorld {
     this.insert(collider);
   }
 
+  /** Removes a temporary obstacle, such as a closed crossing. */
+  remove(collider: Collider): void {
+    const index = this.colliders.indexOf(collider);
+    if (index < 0) return;
+    this.colliders.splice(index, 1);
+    this.cells.clear();
+    for (const remaining of this.colliders) this.insert(remaining);
+  }
+
   /** Whether a circle at this spot would overlap any collider. Nothing is moved. */
   isBlocked(x: number, z: number, radius: number): boolean {
     const minX = Math.floor((x - radius) / this.cellSize);

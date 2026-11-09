@@ -133,5 +133,5 @@ test('an actual Phase 4 save migrates on Continue without resetting progress', a
   expect(await page.evaluate(() => window.__game.state.time.day)).toBe(old.time.day);
   await expect(page.locator('[data-value="food"]')).toHaveText('9');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('emberwick-vale:save')!).version)).toBe(2);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('emberwick-vale:save')!).version)).toBe(3);
 });

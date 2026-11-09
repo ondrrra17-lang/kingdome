@@ -3,6 +3,7 @@ import { expect, test } from './helpers';
 test.use({ viewport: { width: 1600, height: 900 } });
 
 test.beforeEach(async ({ game }) => {
+  await game.openBridge();
   await game.setTime(0.3, true);
 });
 

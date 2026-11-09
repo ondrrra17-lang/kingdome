@@ -3,6 +3,7 @@ import type { InteractionSystem } from '../systems/interaction/InteractionSystem
 import { villagerCount } from '../systems/Recruitment';
 import { ECONOMY, KINGDOM } from '../config';
 import { dailyFood } from '../systems/economy/FoodSystem';
+import { bridgeObjective } from '../systems/construction/BridgeObjective';
 
 const REFRESH_INTERVAL = 0.1;
 
@@ -23,6 +24,9 @@ export class HudView {
   private readonly furs: HTMLElement;
   private readonly foodWarning: HTMLElement;
   private readonly request: HTMLElement;
+  private readonly goalTitle: HTMLElement;
+  private readonly goalDetail: HTMLElement;
+  private readonly goal: HTMLElement;
   private readonly profession: HTMLButtonElement;
   private readonly day: HTMLElement;
   private readonly prompt: HTMLElement;
@@ -55,6 +59,9 @@ export class HudView {
       <div class="hud-notice" role="status" aria-live="polite"></div>
       <div class="hud-food-warning" role="status" aria-live="polite"></div>
       <div class="hud-request"></div>
+      <section class="hud-goal" aria-label="Current objective">
+        <h2></h2><p></p>
+      </section>
       <div class="hud-action">
         <div class="hud-feedback" role="status" aria-live="polite"></div>
         <div class="hud-prompt"><kbd>E</kbd><span></span></div>
@@ -69,6 +76,9 @@ export class HudView {
     this.furs = find('[data-value="furs"]');
     this.foodWarning = find('.hud-food-warning');
     this.request = find('.hud-request');
+    this.goal = find('.hud-goal');
+    this.goalTitle = find('.hud-goal h2');
+    this.goalDetail = find('.hud-goal p');
     this.profession = find('#profession-button') as HTMLButtonElement;
     this.profession.onclick = openProfessions;
     this.day = find('[data-value="day"]');
@@ -84,6 +94,10 @@ export class HudView {
     this.sinceRefresh = 0;
 
     const { resources, time } = this.state;
+    const objective = bridgeObjective(this.state);
+    if (this.goalTitle.textContent !== objective.title) this.goalTitle.textContent = objective.title;
+    if (this.goalDetail.textContent !== objective.detail) this.goalDetail.textContent = objective.detail;
+    this.goal.classList.toggle('complete', objective.done);
     const food = String(resources.food), furs = String(resources.furs);
     if (this.food.textContent !== food) this.food.textContent = food;
     if (this.furs.textContent !== furs) this.furs.textContent = furs;

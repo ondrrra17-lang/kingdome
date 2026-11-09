@@ -29,7 +29,7 @@ test.beforeEach(async ({ game }) => {
 test('a first visit has no start screen, and saving shows a confirmation', async ({ game, page }) => {
   await expect(page.locator('#start-screen')).toHaveCount(0);
   await saveWithButton(page);
-  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).version, SAVE_KEY)).toBe(2);
+  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).version, SAVE_KEY)).toBe(3);
   expect((await game.hud()).coins).toBe(5);
 });
 
@@ -82,6 +82,7 @@ test('an opened chest stays opened and pays nothing after loading', async ({ gam
 });
 
 test('an invited traveler keeps walking after loading, at no extra cost, and nobody is duplicated', async ({ game, page }) => {
+  await game.openBridge();
   await game.teleport(67, -34);
   await expect.poll(async () => (await game.npc('wren')).dormant).toBe(false);
   await page.evaluate(() => {

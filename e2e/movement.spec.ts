@@ -83,6 +83,7 @@ test.describe('moving the player with real keys', () => {
   });
 
   test('the river can only be crossed on the bridge, whose rails hold', async ({ game }) => {
+    await game.openBridge();
     await game.teleport(22, 5);
     await game.hold(['KeyD'], 1500);
     expect((await game.player()).x, 'river blocks away from the bridge').toBeLessThan(34 - 5.5);

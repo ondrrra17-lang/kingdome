@@ -42,7 +42,8 @@ export class ConstructionSystem {
           break;
         }
       }
-      if (!site.solid && (site.status === 'building' || site.status === 'completed')) this.trySolidify(s);
+      // A repaired crossing removes an obstacle; it must never become a solid building.
+      if (def.style !== 'bridge' && !site.solid && (site.status === 'building' || site.status === 'completed')) this.trySolidify(s);
     }
   }
 

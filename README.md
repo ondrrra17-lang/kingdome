@@ -61,13 +61,31 @@ Development builds, or a production build opened with `?debug`, add:
 
 ## How to play
 
+### First objective: restore the Old Bridge
+
+New games begin with a broken crossing on the main road east of the village. The objective
+on the HUD explains your next step and tracks the **8 wood and 4 coins** needed to repair it.
+Press **R** near a villager to assign a woodcutter for free, and wait for deliveries to storage.
+Leave another villager unemployed to do the repair. At the sign on the west bank, press **E**
+to pay once. A builder walks over and repairs the bridge during daylight (35 seconds of work,
+slower during a food shortage). At dusk they stop and resume the next morning.
+
+The damaged bridge blocks both the player and NPC routes to the east bank. After repairs,
+cross it and follow the eastern road north to the Travelers' Camp. Discovering the camp
+completes the opening objective; its travelers can then be invited through the usual interactions.
+Hunters continue using the western hunting grounds until the crossing opens.
+
+Payment, partial repairs, the open crossing and discoveries survive saving and loading.
+Saves from versions 1 and 2 retain their previously open bridge and all existing progress.
+
 You start with 5 coins. Walk up to a villager and press `E` to make them a woodcutter, which
 is free. They find a tree, chop it, and carry the logs to the wood pile beside Alder
 Cottage. Each trip adds 3 wood, up to the pile's limit. Coins, stored wood and the day
 number are shown at the top right. The campfire, the wood pile and the house doors can
 also be used with `E`.
 
-Five marked building sites stand around the village. Walk up to one and press `E` to pay.
+Five marked building sites stand around the village, with the damaged bridge on the east road.
+Walk up to a site and press `E` to pay.
 The nearest free villager then walks over and builds it during daylight:
 
 | Building | Cost | Effect |
@@ -77,6 +95,7 @@ The nearest free villager then walks over and builds it during daylight:
 | Storage Shed | 5 wood, 2 coins | Raises the wood limit from 10 to 25 |
 | Small Farm | 5 wood, 2 coins | Workplace for one farmer |
 | Hunter's Lodge | 6 wood, 3 coins | Workplace for one hunter |
+| Old Bridge (repair, on the east road) | 8 wood, 4 coins | Opens the east bank and the route to the Travelers' Camp |
 
 The village still pays 2 coins at the start of each new day as a progression safety net.
 Trading now also provides renewable income. Set `ECONOMY.dailyCoins` to 0 to turn the

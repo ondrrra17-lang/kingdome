@@ -21,6 +21,7 @@ import { RendererHost } from '../rendering/RendererHost';
 import { SkyView } from '../rendering/SkyView';
 import { CollisionWorld } from '../systems/CollisionWorld';
 import { ConstructionSystem } from '../systems/construction/ConstructionSystem';
+import { BridgeSystem } from '../systems/construction/BridgeSystem';
 import { DailyIncome } from '../systems/DailyIncome';
 import { DayNightSystem } from '../systems/DayNightSystem';
 import { createExplorationInteractables } from '../systems/exploration/explorationInteractables';
@@ -85,6 +86,7 @@ export class Game {
   private readonly npcViews: NpcView[];
   private readonly npcSystem: NpcSystem;
   private readonly constructionSystem: ConstructionSystem;
+  private readonly bridgeSystem: BridgeSystem;
   private readonly constructionView: ConstructionView;
   private readonly dailyIncome: DailyIncome;
   private readonly foodSystem: FoodSystem;
@@ -142,6 +144,8 @@ export class Game {
         surfaceHeight: this.world.surfaceHeight,
       });
     }
+    // Resolve spawns and saves with both banks available before splitting navigation.
+    this.bridgeSystem = new BridgeSystem(this.state, this.collision, nav);
     this.movement = new PlayerMovementSystem(this.input, this.collision, this.world);
     const pathfinder = new Pathfinder(nav);
     this.merchantSystem = new MerchantSystem(this.state, sites, this.world.surfaceHeight);
@@ -165,7 +169,7 @@ export class Game {
     this.sky = new SkyView(noise);
     this.terrain = new TerrainView(this.world, noise);
     this.river = new RiverView(noise);
-    this.settlement = new SettlementView(this.world, glow, pixelRatio);
+    this.settlement = new SettlementView(this.world, glow, pixelRatio, this.state);
     this.distant = new DistantScenery();
     this.ambient = new AmbientEffects(pixelRatio);
     this.vegetation = new VegetationView(this.world.placements);
@@ -322,6 +326,7 @@ export class Game {
     this.dailyIncome.update();
     this.foodSystem.update();
     this.constructionSystem.update(dt);
+    this.bridgeSystem.update();
     this.productionSystem.update(dt);
     this.merchantSystem.update();
     this.npcSystem.update(dt);

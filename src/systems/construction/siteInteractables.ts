@@ -34,7 +34,7 @@ function siteInteractable(site: BuildingSiteState, def: BuildingDefinition, stat
       switch (site.status) {
         case 'available':
           return canAfford(def.cost, state.resources)
-            ? `Build ${def.name} (${costText(def.cost)})`
+            ? `${def.style === 'bridge' ? 'Repair' : 'Build'} ${def.name} (${costText(def.cost)})`
             : `${def.name}: not enough (${costText(def.cost)})`;
         case 'funded':
           return `${def.name}: waiting for a builder`;
@@ -53,7 +53,7 @@ function siteInteractable(site: BuildingSiteState, def: BuildingDefinition, stat
       if (fundSite(site, def.cost, state.resources) === 'insufficient') {
         return `The ${def.name} costs ${costText(def.cost)}. You need ${missingText(def.cost, state)}.`;
       }
-      return `Materials paid: ${costText(def.cost)}. A villager will come to build the ${def.name}.`;
+      return `Materials paid: ${costText(def.cost)}. A free villager will ${def.style === 'bridge' ? 'repair' : 'build'} the ${def.name}.`;
     },
   };
 }

@@ -144,8 +144,11 @@ function chooseNext(npc: NpcState, phase: DayPhase, ctx: BrainContext): void {
       return;
     case 'work': {
       if (npc.job === 'farmer' || npc.job === 'hunter') {
-        const point = npc.job === 'farmer' ? KINGDOM.farm.workplace : KINGDOM.hunt.zones[npc.huntCycles % KINGDOM.hunt.zones.length];
-        if (sites.nearestPoint(point[0], point[1])) {
+        const preferred = npc.job === 'farmer' ? KINGDOM.farm.workplace : KINGDOM.hunt.zones[npc.huntCycles % KINGDOM.hunt.zones.length];
+        // A closed bridge must not strand a hunter after its first delivery.
+        const reachable = sites.nearestPoint(preferred[0], preferred[1]) ||
+          (npc.job === 'hunter' && KINGDOM.hunt.zones.some((point) => sites.nearestPoint(point[0], point[1])));
+        if (reachable) {
           walkTo(npc, 'toWorkplace', sites.pointX, sites.pointZ);
           setFaceTarget(npc, sites.pointX, sites.pointZ + (npc.job === 'farmer' ? 2 : -1));
           return;

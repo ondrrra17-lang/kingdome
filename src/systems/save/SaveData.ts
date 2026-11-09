@@ -1,4 +1,4 @@
-import { BUILDINGS, ECONOMY, KINGDOM } from '../../config';
+import { BUILDINGS, ECONOMY, KINGDOM, PLAYER, WORLD } from '../../config';
 import type { GameState, TimeState } from '../../core/GameState';
 import type { NpcJob, NpcState, TravelPhase } from '../../entities/Npc';
 import { applyBuildingEffect, type SiteStatus } from '../construction/ConstructionState';
@@ -14,7 +14,7 @@ import { checkKingdom } from './KingdomValidation';
  * its starting value, and rules of the game are enforced again when it is applied.
  */
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export interface SavedNpc {
   id: string;
@@ -87,6 +87,11 @@ const STATUSES: readonly SiteStatus[] = ['available', 'funded', 'building', 'com
 
 /** Upgrades older saves, one version at a time. When the format changes, add a step here. */
 const MIGRATIONS: Record<number, (old: Record<string, unknown>) => Record<string, unknown>> = {
+  // Previously this crossing was always open. Preserve access, including travelers on the road.
+  2: (old) => ({ ...old, version: 3, construction: [
+    ...(Array.isArray(old.construction) ? old.construction.filter((s) => !isRecord(s) || s.id !== 'bridge') : []),
+    { id: 'bridge', status: 'completed', progress: 1, workerId: null },
+  ] }),
   1: (old) => {
     const day = isRecord(old.time) && isFiniteNumber(old.time.day) ? old.time.day : 1;
     return { ...old, version: 2, economy: { ...(isRecord(old.economy) ? old.economy : {}), food: ECONOMY.startFood, furs: 0 }, kingdom: createKingdomState(day) };
@@ -254,8 +259,10 @@ function applyTime(time: TimeState, saved: SaveFile['time']): void {
  */
 export function applySave(state: GameState, save: SaveFile, world: SaveWorld): void {
   const { player, resources, village } = state;
+  const crossingOpen = save.construction.some((s) => s.id === 'bridge' && s.status === 'completed');
 
-  if (Number.isFinite(save.player.x) && Number.isFinite(save.player.z) && world.isPlayerPosition(save.player.x, save.player.z)) {
+  const closedBankEdge = WORLD.bridge.x - WORLD.bridge.repairGapHalfLength - PLAYER.radius;
+  if (Number.isFinite(save.player.x) && Number.isFinite(save.player.z) && (crossingOpen || save.player.x <= closedBankEdge + 1e-6) && world.isPlayerPosition(save.player.x, save.player.z)) {
     player.x = player.prevX = save.player.x;
     player.z = player.prevZ = save.player.z;
   }

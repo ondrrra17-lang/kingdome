@@ -141,7 +141,7 @@ export const WORLD = {
     blockHalfWidth: 5.6,
   },
 
-  bridge: { x: 34, z: 0, halfLength: 8.5, halfWidth: 1.6, arch: 1.05 },
+  bridge: { x: 34, z: 0, halfLength: 8.5, halfWidth: 1.6, arch: 1.05, repairGapHalfLength: 3 },
 
   settlementFlatten: { x: -4, z: -3, radius: 28 },
   campfire: {
@@ -708,6 +708,7 @@ export interface BuildingCost {
 }
 
 export type BuildingEffect =
+  | { readonly kind: 'crossing'; readonly amount: number }
   | { readonly kind: 'workplace'; readonly amount: number }
   | { readonly kind: 'woodcutterSlot'; readonly amount: number }
   | { readonly kind: 'woodStorage'; readonly amount: number }
@@ -716,7 +717,7 @@ export type BuildingEffect =
 export interface BuildingDefinition {
   readonly id: string;
   readonly name: string;
-  readonly style: 'hut' | 'shed' | 'watchtower' | 'farm' | 'lodge';
+  readonly style: 'hut' | 'shed' | 'watchtower' | 'farm' | 'lodge' | 'bridge';
   readonly cost: BuildingCost;
   /** Seconds of a villager's work. */
   readonly buildSeconds: number;
@@ -795,6 +796,14 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
     completedText: 'One villager can now work as a hunter.',
     x: 10, z: 5.7, rotY: 0, halfX: 2.1, halfZ: 1.4, height: 3.5,
     anchor: [10, 3.1], stand: [6.8, 5.3], timberSide: 1,
+  },
+  {
+    id: 'bridge', name: 'Old Bridge', style: 'bridge', cost: { wood: 8, coins: 4 },
+    buildSeconds: 35, effect: { kind: 'crossing', amount: 1 },
+    completedText: 'The east bank is open. Follow the road east, then north to the travelers\' camp.',
+    x: WORLD.bridge.x, z: WORLD.bridge.z, rotY: 0,
+    halfX: WORLD.bridge.halfLength, halfZ: WORLD.bridge.halfWidth, height: 2,
+    anchor: [24, 0], stand: [25, 0.2], timberSide: -1,
   },
 ];
 

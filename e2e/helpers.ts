@@ -38,6 +38,15 @@ export interface NpcSnapshot {
 export class GameDriver {
   constructor(readonly page: Page) {}
 
+  /** Scene setup for regressions taking place after the opening bridge objective. */
+  async openBridge(): Promise<void> {
+    await this.page.evaluate(() => {
+      const site = window.__game.state.construction.find((s: { id: string }) => s.id === 'bridge');
+      site.status = 'completed'; site.progress = 1; site.workerId = null;
+    });
+    await this.page.waitForTimeout(100);
+  }
+
   /** Puts the player somewhere without walking there. */
   async teleport(x: number, z: number): Promise<void> {
     await this.page.evaluate(([px, pz]) => {

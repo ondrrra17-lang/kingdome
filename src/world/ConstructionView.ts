@@ -160,6 +160,7 @@ export class ConstructionView {
     const barBack = new MeshBasicMaterial({ color: 0x20160e, opacity: 0.85, ...common });
     const barFill = new MeshBasicMaterial({ color: 0xffc95c, opacity: 1, ...common });
     BUILDINGS.forEach((def, index) => {
+      if (def.style === 'bridge') return; // BridgeView owns the damaged deck and its repair.
       const view = new SiteView(def, sites[index], 900 + index * 10, heightAt(def.x, def.z), material, barBack, barFill, cameraRotation, glowTexture);
       this.views.push(view);
       this.group.add(view.group);

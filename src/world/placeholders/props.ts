@@ -134,15 +134,17 @@ function shadeColor(hex: number, factor: number): number {
 }
 
 /** Wooden bridge along X in world-height coordinates, relative to the bridge centre. */
-export function buildBridge(deckHeightAt: (localX: number) => number, seed: number): BufferGeometry {
+export function buildBridge(deckHeightAt: (localX: number) => number, seed: number, part: 'whole' | 'banks' | 'gap' = 'whole'): BufferGeometry {
   const { halfLength, halfWidth } = WORLD.bridge;
   const waterY = WORLD.river.waterHeight;
   const rng = createRng(seed);
   const b = new LowPolyBuilder();
   const slopeAt = (x: number): number => Math.atan2(deckHeightAt(x + 0.2) - deckHeightAt(x - 0.2), 0.4);
   const plankPitch = 0.46;
+  const includes = (x: number): boolean => part === 'whole' || (part === 'gap' ? Math.abs(x) < WORLD.bridge.repairGapHalfLength : Math.abs(x) >= WORLD.bridge.repairGapHalfLength);
 
   for (let x = -halfLength; x <= halfLength + 0.01; x += plankPitch) {
+    if (!includes(x)) continue;
     const shade = rng() > 0.5 ? PALETTE.plank : PALETTE.plankDark;
     const length = halfWidth * 2 + (rng() - 0.3) * 0.26;
     b.box(plankPitch - 0.035, 0.13, length, {
@@ -159,6 +161,7 @@ export function buildBridge(deckHeightAt: (localX: number) => number, seed: numb
     const x0 = -halfLength + i * span;
     const x1 = x0 + span;
     const midX = (x0 + x1) / 2;
+    if (!includes(midX)) continue;
     const y0 = deckHeightAt(x0);
     const y1 = deckHeightAt(x1);
     const midY = (y0 + y1) / 2;
@@ -173,6 +176,7 @@ export function buildBridge(deckHeightAt: (localX: number) => number, seed: numb
   }
   for (let i = 0; i <= segments; i++) {
     const x = -halfLength + i * span;
+    if (!includes(x)) continue;
     const y = deckHeightAt(x);
     for (const side of [-1, 1]) {
       b.box(0.17, 1.2, 0.17, { at: [x, y + 0.42, side * (halfWidth + 0.02)], color: PALETTE.timber, colorTop: PALETTE.timberLight });
@@ -181,6 +185,7 @@ export function buildBridge(deckHeightAt: (localX: number) => number, seed: numb
 
   // Piles and cross-bracing standing in the water.
   for (const x of [-3.6, 0, 3.6]) {
+    if (!includes(x)) continue;
     const top = deckHeightAt(x) - 0.28;
     const bottom = waterY - 1.2;
     const h = top - bottom;
@@ -193,6 +198,7 @@ export function buildBridge(deckHeightAt: (localX: number) => number, seed: numb
   // Stone abutments ground both ends of the deck.
   for (const side of [-1, 1]) {
     const x = side * (halfLength - 0.6);
+    if (!includes(x)) continue;
     const y = deckHeightAt(x);
     for (const z of [-1, 1]) {
       b.box(1.9, 1.5, 0.5, { at: [x, y - 0.95, z * (halfWidth + 0.02)], color: PALETTE.stoneDark, colorTop: PALETTE.stone });
